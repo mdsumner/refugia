@@ -73,14 +73,21 @@ Large or regenerable outputs go to `data/` (gitignored) or object storage.
 
 ### Australia (DEA terrestrial first)
 
+Results and caveats: [`pilots/australia/README.md`](pilots/australia/README.md);
+map: `refugia_candidates_map.png` from `pilots/australia/candidate_map.R`.
+
 - [x] choose test regions: Tasmania (thermal/topographic) and the MacDonnell Ranges IBRA region (arid, hydrological)
-- [ ] fetch IBRA 7 region polygons for TAS* and MAC (host blocked from the cloud container; see `pilots/australia/README.md`)
-- [ ] S2 registry at levels 10 and 13 over the test region
-- [ ] map WOfS and Fractional Cover pixels to level 13 cells
-- [ ] per-cell, per-year counts and sums; persistence overall and in 2017-2019
-- [ ] AGCD Tmax and precipitation trend and signal-to-noise at level 10
-- [ ] score against IBRA; candidate layer (COG) and cell table (parquet)
+- [x] IBRA 7 region polygons for the 9 Tasmanian regions and MAC (`regions/ibra7/`)
+- [x] pixel-to-cell mapping for the DEA tile grid at level 13 (cells are taken from the mappings; no separate registry)
+- [x] WOfS per-cell, per-year sums and per-pixel persistent-water counts, 1987-2025, IBRA land mask
+- [x] Fractional Cover green persistence against each pilot's five driest years (AGCD)
+- [x] AGCD v1-0-4 Tmax, Tmin and precipitation trend, signal-to-noise and velocity at level 10, 1971-2025 (run on Gadi, `gadi/`)
+- [x] artificial-water mask from Overture Maps (OSM) polygons; stricter water flag
+- [x] score within IBRA; joined candidate table per level 13 cell (rds/csv) and small-multiple map
+- [ ] candidate layer as COG and cell table as parquet
 - [ ] gate: one IBRA subregion's cell-sum wet fraction equals a direct WOfS summary
+- [ ] hand-checked exclusions for unmapped artificial water near Alice Springs
+- [ ] Tasmanian replacement for the green flag (dry years are greener there)
 
 ### Antarctica
 
