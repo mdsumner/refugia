@@ -1,0 +1,31 @@
+#!/bin/bash
+#PBS -q copyq
+#PBS -l ncpus=1
+#PBS -l mem=16GB
+#PBS -l walltime=02:00:00
+#PBS -l jobfs=1GB
+#PBS -l wd
+#PBS -j oe
+#PBS -N refugia-ice
+## trend.ice ice season COGs (Pawsey Acacia, anonymous read) to S2 level 9
+## cell sums for the Antarctic pilot. copyq because the job reads over the
+## network. Run from a clone of the refugia repo on Gadi (git pull first):
+##
+##   qsub -P gv90 -l storage=gdata/jk72 gadi/ice_sums.pbs
+##
+## Optional -v: OUTDIR, LEVEL (default 9), SUB (sub-pixels per edge, default 5).
+## Output: $OUTDIR/ice_L<level>_<year>.rds (about 2 MB each with the ocean only), the mapping, and
+## direct_pixels.csv. Resumable: rerun the same command if it stops.
+## Expect a few seconds per ice year plus a minute for the mapping.
+set -euo pipefail
+module load singularity
+SIF=${SIF:-/g/data/jk72/$USER/sif_lib/gdal-r-python-extras_latest.sif}
+[ -f "$SIF" ] || { echo "no image at $SIF" >&2; exit 1; }
+OUTDIR=${OUTDIR:-/g/data/jk72/$USER/refugia/ice_L9}
+LEVEL=${LEVEL:-9}
+SUB=${SUB:-5}
+mkdir -p "$OUTDIR"
+export SINGULARITYENV_R_LIBS_USER=/nonexistent SINGULARITYENV_R_LIBS= SINGULARITYENV_PYTHONNOUSERSITE=1
+echo "start $(date -Is) level $LEVEL sub $SUB -> $OUTDIR"
+singularity exec -B /g/data "$SIF" Rscript gadi/ice_sums.R "$OUTDIR" "$LEVEL" "$SUB"
+echo "done $(date -Is): $(ls "$OUTDIR" | wc -l) files in $OUTDIR"
