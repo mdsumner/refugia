@@ -200,3 +200,58 @@ Reading:
   interpolation; read signal-to-noise and station density beside the trend.
 - Rainfall has declined over 1971-2025 in most regions, most in TNM, TNS
   and KIN.
+
+## Green-cover persistence (DEA Fractional Cover, 1988-2025)
+
+`pilots/australia/fc_persistence.R`. Green cover is the annual 10th
+percentile of pv (the driest part of each year), compared between the record
+and each pilot's five driest years by AGCD rainfall (MacDonnell 1994, 1996,
+2002, 2009, 2019; Tasmania 2006, 2008, 2014, 2015, 2017).
+
+| IBRA | cells | median green10 % | median dry-year ratio | median trend % per decade |
+|---|---|---|---|---|
+| MAC | 37,693 | 7.9 | 0.66 | 0.50 |
+| TWE | 14,590 | 57.6 | 1.06 | 2.82 |
+| TSE | 10,386 | 44.8 | 1.01 | 1.98 |
+| TCH | 7,281 | 48.0 | 1.04 | 2.28 |
+| TSR | 7,194 | 59.7 | 1.07 | 2.96 |
+| BEL | 6,391 | 54.6 | 1.04 | 2.71 |
+| TNS | 6,032 | 57.0 | 1.04 | 2.72 |
+| KIN | 4,198 | 57.5 | 1.05 | 1.88 |
+| TNM | 3,981 | 34.0 | 0.99 | 1.60 |
+
+- MacDonnell loses a third of its dry-season green cover in dry years, so
+  cells that hold it are a real signal.
+- Tasmanian green cover is slightly higher in dry years (ratio above 1):
+  growth there is limited by light and temperature more than water, so this
+  metric does not mark refugia in Tasmania.
+- The Tasmanian greening trend (2 to 3 % per decade) may include the
+  Landsat 7 to 8 and 9 transition; check against a single-sensor period
+  before reading it as change.
+
+## Joined candidates (`pilots/australia/join_candidates.R`)
+
+One row per level 13 cell, with water, green and thermal flags (thermal from
+the level 10 parent). Counts are of level 13 cells:
+
+| IBRA | cells | water | green | thermal | water+green | green+thermal | water+thermal | all three |
+|---|---|---|---|---|---|---|---|---|
+| MAC | 37,693 | 772 | 8,759 | 4,480 | 189 | 446 | 96 | 9 |
+| TWE | 14,590 | 3,809 | 1,603 | 1,312 | 308 | 80 | 485 | 30 |
+| TSE | 10,386 | 2,548 | 1,741 | 737 | 273 | 101 | 164 | 6 |
+| TCH | 7,281 | 2,333 | 1,149 | 912 | 163 | 262 | 103 | 28 |
+| TSR | 7,194 | 2,214 | 1,008 | 582 | 252 | 235 | 149 | 66 |
+| BEL | 6,391 | 920 | 1,143 | 367 | 49 | 67 | 80 | 3 |
+| TNS | 6,032 | 2,206 | 1,128 | 260 | 178 | 18 | 144 | 3 |
+| KIN | 4,198 | 943 | 630 | 0 | 77 | 0 | 0 | 0 |
+| TNM | 3,981 | 1,550 | 585 | 81 | 245 | 57 | 35 | 20 |
+
+Caveats before reading the overlaps:
+
+- Green and thermal flags are within-region quartiles, so they flag a fixed
+  share of each region by construction; they rank, they do not threshold.
+- The water flag needs only one wet-50 pixel, which is lax: the nine MAC
+  "all three" cells each have one or two such pixels. A stricter flag
+  (wet-90, or several wet-50 pixels) and the artificial-water mask come next.
+- For Tasmania the green flag should be dropped or replaced (see above), which
+  leaves water plus thermal as the meaningful pair there.
