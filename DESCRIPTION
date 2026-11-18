@@ -1,0 +1,12 @@
+Package: refugia
+Title: Identify Climate Refugia from Mergeable Sums on S2 Cells
+Version: 0.0.0.9000
+Authors@R: person("Michael", "Sumner", role = c("aut", "cre"))
+Description: A framework for identifying climate refugia within Australia
+    and Antarctica. Metrics (trend, signal-to-noise, velocity, persistence)
+    are computed from per-cell sufficient statistics on S2 cells, so any
+    union of cells or periods aggregates exactly.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
