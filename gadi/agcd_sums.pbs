@@ -10,8 +10,8 @@
 ## AGCD daily 0.05 deg to S2 level 10 cell sums for the pilot regions.
 ## Run from a clone of the refugia repo on Gadi (git pull first):
 ##
-##   qsub -P <proj> -l storage=gdata/zv2+gdata/<proj> \
-##        -v AGCD_DIR=/g/data/zv2/<path>,VARS=tmax:tmax,precip:precip gadi/agcd_sums.pbs
+##   qsub -P gv90 -l storage=gdata/zv2+gdata/jk72 \
+##        -v AGCD_DIR=/g/data/zv2/agcd/v1-0-4,VARS=tmax:tmax,tmin:tmin,precip:precip gadi/agcd_sums.pbs
 ##
 ## AGCD_DIR holds <var>/... ; each VARS item is <dir>:<netcdf variable> and the
 ## files are taken as $AGCD_DIR/<dir>/**/r005/01day/*.nc (adjust GLOB_TAIL).
