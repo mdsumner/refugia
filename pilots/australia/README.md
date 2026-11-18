@@ -56,11 +56,13 @@ tiles (21 with Wilsons Promontory, FUR01) and MAC needs 12.
 ## Steps
 
 - [x] IBRA 7 polygons for Tasmanian regions and MAC, with subregions
-- [ ] S2 registry at levels 10 and 13 over both regions
+- [x] cells at levels 10 and 13 taken from the tile mappings (no separate registry)
 - [x] pixel-to-cell mapping for the DEA 30 m tile grid (one per tile, reused for every year and product): `build_tile_mapping()`, gated by `sources/wofs_gate.R`
-- [ ] per-cell, per-year WOfS wet/clear sums and FC pv_pc_50 sums
-- [ ] persistence overall and in 2017-2019; gate against a direct WOfS summary of one subregion
-- [ ] AGCD exposure at level 10
+- [x] per-cell, per-year WOfS wet/clear sums and FC green (pv_pc_10, pv_pc_50) sums
+- [x] persistence overall and in dry years
+- [ ] gate against a direct WOfS summary of one subregion
+- [x] AGCD exposure at level 10
+- [x] artificial-water mask, stricter water flag, joined candidates and map
 
 ## First gate results (2019, S2 level 13)
 
