@@ -80,3 +80,46 @@ there should carry `n` and `clear` so low-information cells can be flagged.
 PROJ is run with `PROJ_NETWORK=OFF`, so EPSG:3577 to EPSG:4326 uses the
 non-grid GDA94 transformation (about 1 m difference, far below the 30 m
 pixel and 1 km cell).
+
+## First persistence run (WOfS 1987-2025, level 13)
+
+`Rscript pilots/australia/wofs_persistence.R <sums_dir> <outdir>` over the
+backfill (1,237 of 1,240 tile-years; x56y25, x60y22 and x60y23 have no 1986
+summary at DEA). Cells are assigned to IBRA regions by centre; FUR is dropped.
+
+| IBRA | cells | water-bearing | candidates | median clear looks per pixel per year |
+|---|---|---|---|---|
+| MAC | 37,693 | 757 | 45 | 22.6 |
+| TWE | 14,590 | 14,573 | 1,762 | 5.5 |
+| TSE | 10,386 | 10,274 | 1,318 | 10.1 |
+| TCH | 7,284 | 7,272 | 840 | 7.9 |
+| TSR | 7,194 | 7,191 | 1,078 | 6.6 |
+| BEL | 6,391 | 6,339 | 506 | 9.4 |
+| TNS | 6,032 | 6,026 | 924 | 11.1 |
+| KIN | 4,198 | 4,144 | 472 | 8.0 |
+| TNM | 3,981 | 3,887 | 498 | 17.0 |
+
+Water-bearing: wet fraction over the record at least 1/1180 (one pixel's
+worth). Candidate: wet in at least 90% of observed years and in the upper
+quarter of its region for wet fraction held through 2017-2019.
+
+Rough check against known MacDonnell waterholes (approximate site
+coordinates): Glen Helen and Ormiston Gorge each have a candidate cell within
+1 km; Ellery Creek Big Hole is water-bearing but wet in only 16 of 39 years at
+cell level; Redbank Gorge, Simpsons Gap and Palm Valley are not detected.
+
+What this shows:
+
+- **MacDonnell works but dilutes small pools.** A 1 km cell averages a
+  waterhole of a few pixels into its dry surroundings, and narrow gorge pools
+  are often below or shadowed at 30 m. Next: keep the pixel-level maximum
+  (or count of persistently wet pixels) per cell beside the sums.
+- **Artificial water ranks high.** The top MAC candidate (about 134.0 E,
+  23.7 S) is near Alice Springs and is likely ponds, not habitat. Next: mask
+  with DEA Waterbodies or land use.
+- **Tasmania is not discriminated by water.** Nearly every cell is
+  water-bearing (median wet fraction about 1%), from sea in coastal cells and
+  dense lakes and drainage. Next: an ocean mask, and lean on the thermal and
+  green-cover metrics there, as planned.
+- The 2017-2019 dry period is a mainland drought; for Tasmania another
+  window should be chosen.
