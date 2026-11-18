@@ -73,7 +73,8 @@ Large or regenerable outputs go to `data/` (gitignored) or object storage.
 
 ### Australia (DEA terrestrial first)
 
-- [ ] choose test region (proposed: Tasmania plus one arid IBRA region)
+- [x] choose test regions: Tasmania (thermal/topographic) and the MacDonnell Ranges IBRA region (arid, hydrological)
+- [ ] fetch IBRA 7 region polygons for TAS* and MAC (host blocked from the cloud container; see `pilots/australia/README.md`)
 - [ ] S2 registry at levels 10 and 13 over the test region
 - [ ] map WOfS and Fractional Cover pixels to level 13 cells
 - [ ] per-cell, per-year counts and sums; persistence overall and in 2017-2019

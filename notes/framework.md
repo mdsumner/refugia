@@ -49,3 +49,5 @@ metric. Metrics are kept separate in outputs.
   S2 levels finer than trend.* level 5 (13 for DEA, 10 for AGCD, 9 for sea ice).
 - 2026-11-18: ice-free land starts from the controlledburn rock outcrop burn;
   best current dataset to confirm with colleagues.
+- 2026-11-18: Australian test regions are Tasmania and the MacDonnell Ranges
+  IBRA region, one thermal/topographic and one hydrological site.
