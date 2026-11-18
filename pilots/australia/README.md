@@ -123,3 +123,45 @@ What this shows:
   green-cover metrics there, as planned.
 - The 2017-2019 dry period is a mainland drought; for Tasmania another
   window should be chosen.
+
+## Persistent-water pixels (WOfS 1987-2025, IBRA land mask)
+
+`sources/wofs_pixel_years.R` counts, per 30 m pixel, the years observed
+(count_clear >= 1) and the years wet (count_wet >= 1). Pixels outside IBRA
+are dropped, because coastal tiles otherwise count the sea as permanent
+water (x56y25 went from 9.8 M to 901 wet-90 pixels with the mask).
+`pilots/australia/wofs_pixel_summary.R` gives one row per cell.
+
+| pilot | land cells | cells with a wet-90 pixel | cells with a wet-50 pixel | wet-90 pixels |
+|---|---|---|---|---|
+| MacDonnell | 38,590 | 47 | 777 | 573 |
+| Tasmania | 68,191 | 10,608 | 20,596 | 1,677,670 |
+
+Wet-90: land pixel with at least 20 observed years, wet in at least 90% of
+them. Wet-50: the same at 50%.
+
+Known MacDonnell waterholes, pixels within 3 km of approximate site
+coordinates:
+
+| site | wet-90 | wet-50 | ever wet |
+|---|---|---|---|
+| Glen Helen | 11 | 80 | 2,309 |
+| Ormiston Gorge | 0 | 13 | 6,961 |
+| Ellery Creek Big Hole | 0 | 3 | 9,757 |
+| Simpsons Gap | 0 | 4 | 999 |
+| Redbank Gorge | 0 | 0 | 3,898 |
+| Palm Valley | 0 | 0 | 972 |
+
+Reading:
+
+- The pixel counts separate the permanent pools from the many pixels wet
+  after floods ("ever wet"), which the cell sums could not.
+- At 30 m, WOfS sees Glen Helen as permanent and Ormiston as wet in most
+  years; the narrow or shaded pools at Redbank, Simpsons Gap and Palm Valley
+  are below what it resolves. Those need a site list or finer imagery.
+- The strongest MacDonnell signal (cells near 133.80 to 133.86 E, 23.73 to
+  23.78 S, about 360 of the 573 wet-90 pixels) is just south of Alice
+  Springs and is most likely wastewater ponds. A second cluster near
+  131.98 E, 23.77 S is unidentified. Artificial water still needs a mask.
+- Tasmania has persistent water in 16% of land cells (lakes, reservoirs,
+  wetlands), so water marks habitat there but does not single out refugia.

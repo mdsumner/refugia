@@ -16,12 +16,8 @@ outdir <- if (length(a) > 0) a[1] else "data/wofs"
 lev <- if (length(a) > 1) as.integer(a[2]) else 13L
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
-## tiles intersecting the IBRA pilot footprints (see PR #3)
-tiles <- rbind(
-  data.frame(region = "tasmania", x = c(56, 56, 57, 57, 57, 57, 58, 58, 58, 58, 59, 59, 59, 59, 59, 60, 60, 60, 60),
-                                  y = c(25, 26, 22, 23, 24, 25, 21, 22, 23, 24, 21, 22, 23, 24, 26, 22, 23, 24, 25)),
-  data.frame(region = "macdonnell", x = c(45, 45, 46, 46, 47, 47, 47, 48, 48, 49, 49, 49),
-                                    y = c(44, 45, 44, 45, 44, 45, 46, 45, 46, 44, 45, 46)))
+source("sources/pilot_tiles.R")
+tiles <- pilot_tiles
 years <- 1986:2025
 
 wofs_url <- function(x, y, year, band) {
