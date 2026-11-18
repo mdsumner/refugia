@@ -10,7 +10,7 @@
 ## so AGCD_DIR, VARS and GLOB_TAIL can be set in agcd_sums.pbs.
 set -u
 ROOT=${ROOT:-/g/data/zv2/agcd}
-echo "# agcd probe $(date -Is) $(hostname) $USER, ROOT=$ROOT"
+echo "# agcd probe $(date -Is) $(hostname) ${USER:-?}, ROOT=$ROOT"
 case "$(basename "$ROOT")" in v[0-9]*) versions="$ROOT" ;; *) versions=$(ls -d "$ROOT"/v*/ 2>/dev/null) ;; esac
 for vdir in $versions; do
   vdir=${vdir%/}
