@@ -19,8 +19,12 @@
 ## ice zone only (mean daycount 30-335 days).
 ##
 ## Candidate sea ice refugium (holdout): in its sector, daycount trend in the
-## top quarter (least loss or a gain), velocity in the lowest quarter, and an
-## ice season in at least 90% of years.
+## top quarter (least loss or a gain), an ice season in at least 90% of years,
+## and either no loss or a slow loss velocity: velocity counts only for losing
+## cells (loss over the local gradient, km per decade), in the lowest quarter
+## of the sector's losing cells. A gaining cell has no loss velocity; scoring
+## plain |velocity| instead would penalise the strongest gains (Ross Sea,
+## W Pacific), where the top-quarter trends are gains.
 ##
 ## Gate: the area mean annual duration and daycount from the cell sums equal
 ## the plain per-pixel means (direct_pixels.csv), and so do their trends.
@@ -83,10 +87,15 @@ out$sector[out$sector == "Ross2"] <- "Ross"
 out$ccamlr_area <- ifelse(out$lon >= -70 & out$lon < 30, "48", ifelse(out$lon >= 30 & out$lon < 150, "58", "88"))
 siz <- is.finite(out$clim_daycount) & out$clim_daycount >= 30 & out$clim_daycount <= 335
 out$seasonal_zone <- siz
-out$slope_decade_daycount_pct <- NA_real_; out$velocity_daycount_pct <- NA_real_
+out$slope_decade_daycount_pct <- NA_real_; out$loss_velocity_pct <- NA_real_
 out$slope_decade_daycount_pct[siz] <- group_percentile(out$slope_decade_daycount[siz], out$sector[siz])
-out$velocity_daycount_pct[siz] <- group_percentile(abs(out$velocity_km_decade_daycount[siz]), out$sector[siz])
-out$ice_refugium <- siz & out$slope_decade_daycount_pct >= 0.75 & out$velocity_daycount_pct <= 0.25 &
+## loss velocity: retreat of the daycount isolines across the cell, losing cells only
+out$loss_velocity_km_decade <- abs(out$velocity_km_decade_daycount)
+out$loss_velocity_km_decade[!(out$slope_decade_daycount < 0)] <- 0
+lose <- siz & is.finite(out$slope_decade_daycount) & out$slope_decade_daycount < 0
+out$loss_velocity_pct[lose] <- group_percentile(out$loss_velocity_km_decade[lose], out$sector[lose])
+out$slow_or_gain <- (siz & out$slope_decade_daycount >= 0) | (lose & out$loss_velocity_pct <= 0.25)
+out$ice_refugium <- siz & out$slope_decade_daycount_pct >= 0.75 & out$slow_or_gain %in% TRUE &
   out$season_frac >= 0.9
 out$ice_refugium[is.na(out$ice_refugium)] <- FALSE
 saveRDS(out, file.path(outdir, "ice_exposure_L9.rds"))
@@ -100,6 +109,7 @@ summ <- do.call(rbind, lapply(split(z, z$sector), function(s) data.frame(
   daycount_clim = q(s$clim_daycount), daycount_trend = q(s$slope_decade_daycount),
   duration_trend = q(s$slope_decade_duration), advance_trend = q(s$slope_decade_advance),
   retreat_trend = q(s$slope_decade_retreat), velocity_km_decade = q(s$velocity_km_decade_daycount),
+  losing_share = round(mean(s$slope_decade_daycount < 0, na.rm = TRUE), 2),
   refugium_cells = sum(s$ice_refugium))))
 summ <- summ[match(intersect(sector_levels, summ$sector), summ$sector), ]
 print(summ, row.names = FALSE)
