@@ -165,3 +165,38 @@ Reading:
   131.98 E, 23.77 S is unidentified. Artificial water still needs a mask.
 - Tasmania has persistent water in 16% of land cells (lakes, reservoirs,
   wetlands), so water marks habitat there but does not single out refugia.
+
+## Climate exposure (AGCD v1-0-4, 1971-2025, S2 level 10)
+
+Cell sums were computed on Gadi (`gadi/agcd_sums.pbs`, then
+`gadi/agcd_combine.R`); `pilots/australia/agcd_exposure.R` turns them into
+per-cell climatology, trend, signal-to-noise and, for temperature, climate
+velocity (trend over local gradient of the climatology), each scored within
+its IBRA region. Thermal candidate: lowest quarter of the region for both
+the tmax trend and the tmax velocity. Median [10th, 90th percentile]:
+
+| IBRA | cells | tmax trend C/decade | tmin trend C/decade | tmax velocity km/decade | precip % per decade | thermal candidates |
+|---|---|---|---|---|---|---|
+| MAC | 582 | 0.25 [0.18, 0.31] | 0.17 [0.12, 0.25] | 6.85 [3.23, 20.76] | -1.69 [-4.34, -0.26] | 72 |
+| TWE | 228 | 0.16 [0.14, 0.19] | 0.07 [0.05, 0.13] | 2.06 [1.10, 6.12] | -0.98 [-2.65, 0.39] | 22 |
+| TSE | 159 | 0.17 [0.13, 0.21] | 0.11 [0.03, 0.21] | 1.87 [0.83, 4.98] | -1.71 [-2.89, -0.69] | 12 |
+| TCH | 114 | 0.17 [0.13, 0.21] | 0.05 [0.02, 0.09] | 1.59 [0.67, 4.44] | -1.29 [-2.80, 0.52] | 14 |
+| TSR | 114 | 0.20 [0.16, 0.22] | 0.06 [0.02, 0.09] | 1.59 [0.66, 4.27] | -1.06 [-2.20, 0.57] | 9 |
+| BEL | 99 | 0.17 [0.12, 0.18] | 0.12 [0.08, 0.16] | 1.24 [0.56, 3.58] | -0.26 [-1.80, 1.65] | 5 |
+| TNS | 96 | 0.12 [0.10, 0.15] | 0.12 [0.08, 0.16] | 1.27 [0.71, 3.31] | -1.94 [-2.78, -1.24] | 4 |
+| TNM | 66 | 0.18 [0.14, 0.19] | 0.07 [0.04, 0.11] | 2.35 [0.96, 10.60] | -2.14 [-3.56, -1.32] | 2 |
+| KIN | 63 | 0.13 [0.10, 0.19] | 0.08 [0.00, 0.10] | 4.15 [2.24, 12.76] | -1.91 [-2.73, -1.45] | 0 |
+
+Reading:
+
+- MacDonnell warms faster (tmax about 0.25 C per decade) and its gentle
+  gradients give velocities several times Tasmania's; the ranges themselves
+  are where velocity drops.
+- In Tasmania the Central Highlands candidates cluster around 146 E, 41.5 to
+  41.8 S (Central Plateau and Great Western Tiers), as expected for
+  topographic buffering. Tmin warms slowly there (about 0.05 C per decade).
+- AGCD is an analysis with a long length scale (250 km for tmax), so trends
+  in sparsely stationed country (western Tasmania, much of MAC) are partly
+  interpolation; read signal-to-noise and station density beside the trend.
+- Rainfall has declined over 1971-2025 in most regions, most in TNM, TNS
+  and KIN.
