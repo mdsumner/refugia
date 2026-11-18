@@ -38,16 +38,31 @@ dea_tile_grid <- function(x, y) {
 #'   `cells` (character tokens, sorted), `grid`, `level`
 #' @export
 build_tile_mapping <- function(x, y, level = 13L, band_rows = 400L) {
-  g <- dea_tile_grid(x, y)
+  build_grid_mapping(dea_tile_grid(x, y), level = level, band_rows = band_rows)
+}
+
+#' Map the pixels of any regular grid to S2 cells
+#'
+#' @param grid list with `extent` (xmin, xmax, ymin, ymax), `dimension`
+#'   (ncol, nrow) and `crs`; north-up, row 1 at the top
+#' @param level S2 level
+#' @param band_rows rows processed at a time (memory bound)
+#' @return as [build_tile_mapping()]
+#' @export
+build_grid_mapping <- function(grid, level, band_rows = 400L) {
+  g <- grid
   nc <- g$dimension[["ncol"]]; nr <- g$dimension[["nrow"]]
-  xc <- g$extent[["xmin"]] + (seq_len(nc) - 0.5) * g$res
+  rx <- (g$extent[["xmax"]] - g$extent[["xmin"]]) / nc
+  ry <- (g$extent[["ymax"]] - g$extent[["ymin"]]) / nr
+  xc <- g$extent[["xmin"]] + (seq_len(nc) - 0.5) * rx
   runs <- vector("list", ceiling(nr / band_rows))
   starts <- seq(1L, nr, by = band_rows)
+  lonlat <- identical(g$crs, "EPSG:4326") || identical(g$crs, "OGC:CRS84")
   for (b in seq_along(starts)) {
     rows <- starts[b]:min(nr, starts[b] + band_rows - 1L)
-    yc <- g$extent[["ymax"]] - (rows - 0.5) * g$res
+    yc <- g$extent[["ymax"]] - (rows - 0.5) * ry
     xy <- cbind(rep(xc, length(rows)), rep(yc, each = nc))
-    ll <- terra::project(xy, from = g$crs, to = "EPSG:4326")
+    ll <- if (lonlat) xy else terra::project(xy, from = g$crs, to = "EPSG:4326")
     tok <- as.character(s2::s2_cell_parent(
       s2::as_s2_cell(s2::s2_lnglat(ll[, 1], ll[, 2])), level))
     ## runs within each row: a run breaks where the token changes or a row starts

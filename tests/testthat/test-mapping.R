@@ -17,3 +17,14 @@ test_that("sum_to_cells adds values by run index and ignores NA", {
   expect_equal(s$v, c(1 + 2 + 5 + 6 + 7 + 8, 3))
   expect_equal(s$n, c(6L, 1L))
 })
+
+test_that("grid mapping on a small lon/lat grid puts each pixel centre in its cell", {
+  g <- list(extent = c(xmin = 147, xmax = 147.5, ymin = -42.5, ymax = -42),
+            dimension = c(ncol = 10L, nrow = 10L), crs = "EPSG:4326")
+  m <- build_grid_mapping(g, level = 10L)
+  idx <- mapping_index(m)
+  expect_length(idx, 100L)
+  xc <- rep(147 + (1:10 - 0.5) * 0.05, 10); yc <- rep(-42 - (1:10 - 0.5) * 0.05, each = 10)
+  direct <- as.character(s2::s2_cell_parent(s2::as_s2_cell(s2::s2_lnglat(xc, yc)), 10L))
+  expect_equal(m$cells[idx], direct)
+})
