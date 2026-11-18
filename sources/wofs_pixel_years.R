@@ -7,7 +7,8 @@
 ## Here each pixel first counts the years it was observed (count_clear >= 1)
 ## and the years it was wet (count_wet >= 1), over 1987-2025; then per cell we
 ## count pixels that were wet in at least 90% (and at least 50%) of observed
-## years with at least 20 observed years, and pixels ever wet.
+## years with at least 20 observed years, and pixels ever wet, all within
+## the IBRA land mask.
 ## Output: <outdir>/pixyears_<tile>_L<level>.rds, one per tile, resumable.
 
 Sys.setenv(PROJ_NETWORK = "OFF", GDAL_DISABLE_READDIR_ON_OPEN = "EMPTY_DIR")
@@ -22,6 +23,18 @@ mapdir <- if (length(a) > 2) a[3] else outdir
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 source("sources/pilot_tiles.R")
 years <- 1987:2025
+
+## land mask: IBRA covers land only (sea, and estuaries beyond the coast,
+## are outside it), so pixels outside every IBRA region are dropped. Without
+## it, coastal tiles count the sea as persistent water.
+ibra <- terra::project(terra::vect("regions/ibra7/ibra7_regions_pilot.geojson"), "EPSG:3577")
+land_mask <- function(m) {
+  g <- m$grid
+  r <- terra::rast(ncols = g$dimension[["ncol"]], nrows = g$dimension[["nrow"]],
+                   xmin = g$extent[["xmin"]], xmax = g$extent[["xmax"]],
+                   ymin = g$extent[["ymin"]], ymax = g$extent[["ymax"]], crs = g$crs)
+  !is.na(terra::values(terra::rasterize(ibra, r, field = 1), mat = FALSE))
+}
 
 wofs_url <- function(x, y, year, band) {
   sprintf(paste0("/vsicurl/https://dea-public-data.s3.ap-southeast-2.amazonaws.com/",
@@ -54,12 +67,13 @@ for (i in seq_len(nrow(pilot_tiles))) {
     }, silent = TRUE)
     if (inherits(res, "try-error")) cat(tile, yr, "FAIL", conditionMessage(attr(res, "condition")), "\n")
   }
+  land <- land_mask(m)
   frac <- ifelse(obs > 0, wetyrs / obs, 0)
-  ok20 <- obs >= 20
-  s <- sum_to_cells(m, px_obs20 = as.numeric(ok20),
+  ok20 <- land & obs >= 20
+  s <- sum_to_cells(m, px_land = as.numeric(land), px_obs20 = as.numeric(ok20),
                     px_wet90 = as.numeric(ok20 & frac >= 0.9),
                     px_wet50 = as.numeric(ok20 & frac >= 0.5),
-                    px_ever = as.numeric(wetyrs >= 1), index = idx)
+                    px_ever = as.numeric(land & wetyrs >= 1), index = idx)
   s$tile <- tile; s$region <- pilot_tiles$region[i]; s$years_read <- nyr
   saveRDS(s, of)
   cat(format(Sys.time(), "%H:%M:%S"), tile, "years", nyr, "wet90 px", sum(s$px_wet90), "\n")
