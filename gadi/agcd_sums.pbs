@@ -11,9 +11,10 @@
 ## Run from a clone of the refugia repo on Gadi (git pull first):
 ##
 ##   qsub -P gv90 -l storage=gdata/zv2+gdata/jk72 \
-##        -v AGCD_DIR=/g/data/zv2/agcd/v1-0-4,VARS=tmax:tmax,tmin:tmin,precip:precip gadi/agcd_sums.pbs
+##        -v AGCD_DIR=/g/data/zv2/agcd/v1-0-4,VARS=tmax+tmin+precip gadi/agcd_sums.pbs
 ##
-## AGCD_DIR holds <var>/... ; each VARS item is <dir>:<netcdf variable> and the
+## AGCD_DIR holds <var>/... ; VARS items are separated by + (qsub -v splits on
+## commas), each <dir> or <dir>:<netcdf variable>, and the
 ## files are taken as $AGCD_DIR/<dir>/**/r005/01day/*.nc (adjust GLOB_TAIL).
 ## Output: $OUTDIR/agcd_<var>_<region>_<year>_L10.rds (small, rsync or git them back).
 ## Resumable: rerun the same command if it hits walltime.
@@ -22,12 +23,12 @@ module load singularity
 SIF=${SIF:-/g/data/jk72/$USER/sif_lib/gdal-r-python-extras_latest.sif}
 [ -f "$SIF" ] || { echo "no image at $SIF" >&2; exit 1; }
 : "${AGCD_DIR:?set AGCD_DIR (see gadi/agcd_probe.sh)}"
-VARS=${VARS:-tmax:tmax,precip:precip}
+VARS=${VARS:-tmax+tmin+precip}
 GLOB_TAIL=${GLOB_TAIL:-mean/r005/01day/*.nc}
 OUTDIR=${OUTDIR:-/g/data/jk72/$USER/refugia/agcd_L10}
 mkdir -p "$OUTDIR"
 export SINGULARITYENV_R_LIBS_USER=/nonexistent SINGULARITYENV_R_LIBS= SINGULARITYENV_PYTHONNOUSERSITE=1
-for item in ${VARS//,/ }; do
+for item in ${VARS//[+,]/ }; do
   d=${item%%:*}; v=${item##*:}
   g="$AGCD_DIR/$d/$GLOB_TAIL"
   [ "$d" = precip ] && g="$AGCD_DIR/$d/${GLOB_TAIL/mean/total}"

@@ -15,5 +15,5 @@ The container image and project defaults follow imos-sor/nci (`jk72`, `gdal-r-py
 - NetCDF variable names match the folder names (`tmax`, `tmin`, `precip`). The grid is 886 x 691, lon/lat.
 
     qsub -P gv90 -l storage=gdata/zv2+gdata/jk72 \
-      -v AGCD_DIR=/g/data/zv2/agcd/v1-0-4,VARS=tmax:tmax,tmin:tmin,precip:precip \
+      -v AGCD_DIR=/g/data/zv2/agcd/v1-0-4,VARS=tmax+tmin+precip \
       gadi/agcd_sums.pbs
