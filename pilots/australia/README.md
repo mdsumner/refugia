@@ -255,3 +255,58 @@ Caveats before reading the overlaps:
   (wet-90, or several wet-50 pixels) and the artificial-water mask come next.
 - For Tasmania the green flag should be dropped or replaced (see above), which
   leaves water plus thermal as the meaningful pair there.
+
+## Artificial-water mask and stricter water flag
+
+`sources/overture_water.py` reads Overture Maps base/water (OpenStreetMap
+derived, public bucket `s3://overturemaps-us-west-2`, release 2026-10-21.0)
+for each pilot box and keeps polygons that are artificial by class
+(reservoir, basin, wastewater, canal and ditch areas, pools) or that are
+unclassed water or pond polygons drawn as near rectangles (area over minimum
+rotated rectangle >= 0.85, at most 12 vertices). `sources/water_mask.R` then
+marks each persistent-water pixel (wet in >= 50% of 20+ observed years)
+within 60 m of one of those polygons as artificial.
+
+Sources tried and not used: DEA Waterbodies v3 has no artificial attribute
+and its pixel-traced outlines do not separate ponds from pools by shape (the
+Alice Springs ponds score 0.57-0.74, merged); DEA Land Cover level 3 shows
+cultivated and bare classes around both the ponds and Glen Helen. GA, OSM
+Overpass and Geofabrik hosts are blocked from the cloud container.
+
+The water flag is now: at least one natural pixel wet in >= 90% of years, or
+at least three wet in >= 50%. Cells whose persistent water is all on mapped
+artificial water are kept as `water_artificial`.
+
+| IBRA | water | water_artificial | water+green | green+thermal | water+thermal | all three |
+|---|---|---|---|---|---|---|
+| MAC | 257 | 14 | 98 | 446 | 22 | 0 |
+| TWE | 1,848 | 872 | (green not used) | | 250 | |
+| TSE | 1,684 | 168 | | | 80 | |
+| TCH | 1,846 | 96 | | | 64 | |
+| TSR | 1,511 | 39 | | | 96 | |
+| BEL | 544 | 21 | | | 46 | |
+| TNS | 1,439 | 183 | | | 103 | |
+| KIN | 695 | 38 | | | 0 | |
+| TNM | 1,183 | 74 | | | 23 | |
+
+`n_kinds` no longer counts the green flag in Tasmania.
+
+Per-pixel totals, MAC: 593 persistent pixels are artificial and 4,757 natural
+(wet-90: 188 artificial, 385 natural). The Alice Springs sewage ponds
+(133.83-133.86E) are caught. Not caught, because they are not mapped as
+artificial: about 200 wet-90 pixels at 133.80-133.81E, 23.75-23.78S, south
+west of the ponds (possibly effluent-fed wetland; not verified), and the
+cluster at 131.98E, 23.78S (still unidentified). A short hand-checked
+exclusion list may be needed for these.
+
+Tasmania: 668,113 persistent pixels are artificial, mostly the hydro storages
+(Great Lake, Lake Gordon, Lake Pedder and others mapped as reservoirs), which
+include natural lakes raised by dams. Persistent natural water remains in
+about 15% of land cells, so water still does not discriminate there.
+
+With the stricter flag no MAC cell is flagged by all three kinds; the nine
+earlier ones each rested on one or two wet-50 pixels.
+
+Map: `pilots/australia/candidate_map.R` writes
+`refugia_candidates_map.png`, one row per pilot, one panel per kind plus a
+panel for cells with two or more kinds.
