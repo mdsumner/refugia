@@ -48,15 +48,14 @@ years and 39 FC years.
 
 ## Region polygons
 
-IBRA 7 regions and subregions are served at
-`https://gis.environment.gov.au/gispubmap/rest/services/ogc_services/IBRA7_Regions/MapServer/0`
-(and `IBRA7_Subregions`). That host, the IMAS geoserver and the DCCEEW hub
-are refused by the cloud container's network policy, so the polygons need
-to be fetched elsewhere or the host allowed.
+IBRA 7 regions and subregions for both pilots are in `regions/ibra7/`
+(fetched by `regions/fetch_ibra7.py` from the DCCEEW FeatureServer; see
+`regions/ibra7/README.md`). Trimmed to the polygons, Tasmania needs 19 DEA
+tiles (21 with Wilsons Promontory, FUR01) and MAC needs 12.
 
 ## Steps
 
-- [ ] IBRA 7 polygons for Tasmanian regions and MAC, with subregions
+- [x] IBRA 7 polygons for Tasmanian regions and MAC, with subregions
 - [ ] S2 registry at levels 10 and 13 over both regions
 - [ ] pixel-to-cell mapping for the DEA 30 m tile grid (one per tile, reused for every year and product)
 - [ ] per-cell, per-year WOfS wet/clear sums and FC pv_pc_50 sums
