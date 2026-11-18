@@ -91,8 +91,8 @@ map: `refugia_candidates_map.png` from `pilots/australia/candidate_map.R`.
 
 ### Antarctica
 
-- [ ] sea ice: duration and retreat-day trend and signal-to-noise from trend.ice, scored against CCAMLR areas
-- [ ] gate: Southern Ocean mean duration trend from cell sums matches a direct per-pixel computation from the trend.ice COGs
+- [x] sea ice: daycount, duration, advance and retreat trend, signal-to-noise, velocity and persistence from trend.ice at level 9, scored within the five trend.ice sectors (CCAMLR area carried per cell); see `pilots/antarctica/README.md`
+- [x] gate: Southern Ocean mean duration trend from cell sums matches a direct per-pixel computation from the trend.ice COGs
 - [ ] ocean: SST trend south of 60S from trend.sst sums
 - [ ] land: ice-free fraction per cell from the controlledburn rock outcrop burn; exposure from ERA5 summer temperature; scored against ACBRs
 - [ ] confirm best current ice-free source with colleagues (see `notes/data_sources.md`)
