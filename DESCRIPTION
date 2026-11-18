@@ -8,5 +8,6 @@ Description: A framework for identifying climate refugia within Australia
     union of cells or periods aggregates exactly.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Imports: s2, terra
 Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3

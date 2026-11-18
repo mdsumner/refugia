@@ -1,3 +1,7 @@
 export(trend_sums)
 export(trend_from_sums)
 export(persistence_from_counts)
+export(dea_tile_grid)
+export(build_tile_mapping)
+export(mapping_index)
+export(sum_to_cells)
