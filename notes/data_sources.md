@@ -25,7 +25,7 @@ marked "checked" have been read from a source page.
 | source | variable | feeds | access |
 |---|---|---|---|
 | trend.ice (NSIDC CDR, Bremen ASI) | advance, retreat, duration per ice year | trend and persistence of the ice season | Pawsey Acacia `s3://aad-derived/trend-ice/` (endpoint https://projects.pawsey.org.au) |
-| trend.sst south of 60S | SST | trend, signal-to-noise | trend.sst sums |
+| trend.sst south of 60S | SST | trend, signal-to-noise | trend.sst sums are level 5 only; used OISST v2.1 daily pixels from `s3://noaa-cdr-sea-surface-temp-optimum-interpolation-pds` (public, reachable from cloud sessions) |
 
 ## Antarctica, ice-free land (checked)
 

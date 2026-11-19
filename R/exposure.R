@@ -50,7 +50,8 @@ cell_gradient <- function(cells, z) {
     nb <- as.character(s2::s2_cell_edge_neighbour(cc, e))
     j <- match(nb, cells)
     ok <- !is.na(j) & is.finite(z) & is.finite(z[j])
-    dx <- (lon[j] - lon) * cos(lat * pi / 180) * 111.195
+    dlon <- (lon[j] - lon + 540) %% 360 - 180   # across the antimeridian
+    dx <- dlon * cos(lat * pi / 180) * 111.195
     dy <- (lat[j] - lat) * 111.195
     dz <- z[j] - z
     dx[!ok] <- 0; dy[!ok] <- 0; dz[!ok] <- 0
