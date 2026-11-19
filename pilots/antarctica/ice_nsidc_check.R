@@ -3,7 +3,7 @@
 ## Rscript pilots/antarctica/ice_nsidc_check.R <ice_dir> <sii_csv> <outdir>
 ##
 ## <ice_dir>  ice_L9_<year>.rds from gadi/ice_sums.R
-## <sii_csv>  S_seaice_extent_daily_v3.0.csv, from
+## <sii_csv>  S_seaice_extent_daily_v4.0.csv, from
 ##            https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/
 ##
 ## Summed over the grid, daycount times true pixel area is the daily ice
@@ -25,12 +25,14 @@
 
 a <- commandArgs(TRUE)
 indir <- if (length(a) > 0) a[1] else "data/ice_L9"
-sii_csv <- if (length(a) > 1) a[2] else "data/S_seaice_extent_daily_v3.0.csv"
+sii_csv <- if (length(a) > 1) a[2] else "data/S_seaice_extent_daily_v4.0.csv"
 outdir <- if (length(a) > 2) a[3] else "data"
 
 ## trend.ice side: integrated extent per ice year from the cell sums
 ff <- list.files(indir, "^ice_L9_[0-9]{4}[.]rds$", full.names = TRUE)
-d <- do.call(rbind, lapply(ff, function(f) readRDS(f)[c("cell", "year", "w_obs", "s_daycount")]))
+d <- do.call(rbind, lapply(ff, function(f) { x <- readRDS(f)
+  if (is.null(x$s_dayadj)) x$s_dayadj <- NA_real_
+  x[c("cell", "year", "w_obs", "s_daycount", "s_dayadj")] }))
 cells <- unique(d$cell)
 ctr <- s2::s2_cell_center(s2::as_s2_cell(cells))
 ## true area of a 25 km pixel at latitude lat on EPSG:3412 (Hughes 1980
@@ -56,12 +58,14 @@ cat(sprintf("pixel area formula vs terra::cellSize south of 55S: max relative di
 stopifnot(area_err < 1e-3)
 area <- pix_area_km2(s2::s2_y(ctr))
 d$area_km2 <- area[match(d$cell, cells)]
-ti <- aggregate(cbind(icedays = s_daycount * area_km2, ocean_km2 = w_obs * area_km2) ~ year,
-                data = d, FUN = sum)
+ti <- aggregate(cbind(icedays = s_daycount * area_km2, icedays_adj = s_dayadj * area_km2,
+                      ocean_km2 = w_obs * area_km2) ~ year, data = d, FUN = sum, na.action = na.pass)
 
 ## Sea Ice Index side
-s <- utils::read.csv(sii_csv, skip = 2, header = FALSE, strip.white = TRUE,
-                     col.names = c("Year", "Month", "Day", "Extent", "Missing", "Source"))
+## the Source field can hold commas, so keep the first five fields only
+x <- strsplit(readLines(sii_csv)[-(1:2)], ",")
+s <- as.data.frame(do.call(rbind, lapply(x, function(v) as.numeric(v[1:5]))))
+names(s) <- c("Year", "Month", "Day", "Extent", "Missing")
 s$date <- as.Date(sprintf("%d-%02d-%02d", s$Year, s$Month, s$Day))
 s <- s[!is.na(s$Extent) & s$Extent > 0, ]
 sii_year <- function(y) {
@@ -77,36 +81,43 @@ si <- do.call(rbind, lapply(ti$year, sii_year))
 cmp <- merge(ti, si, by = "year")
 cmp <- cmp[cmp$sii_max_gap <= 3, ]
 cmp$cdr_mean_extent_Mkm2 <- cmp$icedays / cmp$ndays / 1e6
+cmp$cdr_adj_mean_extent_Mkm2 <- cmp$icedays_adj / cmp$ndays / 1e6
 cmp$sii_mean_extent_Mkm2 <- cmp$sii_icedays / cmp$ndays / 1e6
 cmp$ratio <- cmp$cdr_mean_extent_Mkm2 / cmp$sii_mean_extent_Mkm2
+cmp$ratio_adj <- cmp$cdr_adj_mean_extent_Mkm2 / cmp$sii_mean_extent_Mkm2
 anom <- function(x) x - mean(x)
 tr <- function(x, t) unname(stats::coef(stats::lm(x ~ t))[2]) * 10
-summ <- data.frame(
-  years = nrow(cmp), first = min(cmp$year), last = max(cmp$year),
-  cdr_mean_Mkm2 = mean(cmp$cdr_mean_extent_Mkm2), sii_mean_Mkm2 = mean(cmp$sii_mean_extent_Mkm2),
-  ratio_mean = mean(cmp$ratio), ratio_min = min(cmp$ratio), ratio_max = max(cmp$ratio),
-  cor_anomaly = stats::cor(anom(cmp$cdr_mean_extent_Mkm2), anom(cmp$sii_mean_extent_Mkm2)),
-  rmse_anomaly_Mkm2 = sqrt(mean((anom(cmp$cdr_mean_extent_Mkm2) - anom(cmp$sii_mean_extent_Mkm2))^2)),
-  cdr_trend_Mkm2_decade = tr(cmp$cdr_mean_extent_Mkm2, cmp$year),
-  sii_trend_Mkm2_decade = tr(cmp$sii_mean_extent_Mkm2, cmp$year),
-  cdr_trend_pct_decade = 100 * tr(cmp$cdr_mean_extent_Mkm2, cmp$year) / mean(cmp$cdr_mean_extent_Mkm2),
-  sii_trend_pct_decade = 100 * tr(cmp$sii_mean_extent_Mkm2, cmp$year) / mean(cmp$sii_mean_extent_Mkm2))
+one <- function(lab, x, ref = cmp$sii_mean_extent_Mkm2, t = cmp$year) data.frame(
+  daycount = lab, years = length(t), first = min(t), last = max(t),
+  cdr_mean_Mkm2 = mean(x), sii_mean_Mkm2 = mean(ref),
+  ratio_mean = mean(x / ref), ratio_min = min(x / ref), ratio_max = max(x / ref),
+  cor_anomaly = stats::cor(anom(x), anom(ref)),
+  rmse_anomaly_Mkm2 = sqrt(mean((anom(x) - anom(ref))^2)),
+  cdr_trend_Mkm2_decade = tr(x, t), sii_trend_Mkm2_decade = tr(ref, t),
+  cdr_trend_pct_decade = 100 * tr(x, t) / mean(x), sii_trend_pct_decade = 100 * tr(ref, t) / mean(ref))
+summ <- one("raw", cmp$cdr_mean_extent_Mkm2)
+if (all(is.finite(cmp$cdr_adj_mean_extent_Mkm2)))
+  summ <- rbind(summ, one("adjusted for missing days", cmp$cdr_adj_mean_extent_Mkm2))
 print(format(summ, digits = 4), row.names = FALSE)
+best <- if (nrow(summ) > 1) cmp$cdr_adj_mean_extent_Mkm2 else cmp$cdr_mean_extent_Mkm2
 write.csv(cmp, file.path(outdir, "ice_nsidc_by_year.csv"), row.names = FALSE)
 write.csv(summ, file.path(outdir, "ice_nsidc_summary.csv"), row.names = FALSE)
 
 grDevices::png(file.path(outdir, "ice_nsidc_check.png"), width = 1600, height = 700, res = 150)
 op <- graphics::par(mfrow = c(1, 2), mar = c(4.2, 4.2, 2, 1))
-graphics::plot(cmp$year, cmp$cdr_mean_extent_Mkm2, type = "b", pch = 19, col = "#1f5fa8",
-               ylim = range(c(cmp$cdr_mean_extent_Mkm2, cmp$sii_mean_extent_Mkm2)),
+graphics::plot(cmp$year, best, type = "b", pch = 19, col = "#1f5fa8",
+               ylim = range(c(best, cmp$cdr_mean_extent_Mkm2, cmp$sii_mean_extent_Mkm2)),
                xlab = "ice year (Feb 15 start)", ylab = "mean daily extent (million km2)",
                main = "Antarctic mean daily sea ice extent")
 graphics::lines(cmp$year, cmp$sii_mean_extent_Mkm2, type = "b", pch = 1, col = "#c0392b")
-graphics::legend("bottomleft", c("trend.ice cell sums (CDR v6)", "Sea Ice Index v3 (NASA Team)"),
-                 col = c("#1f5fa8", "#c0392b"), pch = c(19, 1), lty = 1, bty = "n")
-graphics::plot(anom(cmp$sii_mean_extent_Mkm2), anom(cmp$cdr_mean_extent_Mkm2), pch = 19, asp = 1,
+if (nrow(summ) > 1) graphics::points(cmp$year, cmp$cdr_mean_extent_Mkm2, pch = 4, col = "#1f5fa8")
+graphics::legend("bottomleft", c(paste0("trend.ice cell sums (CDR v6)", if (nrow(summ) > 1) ", adjusted"),
+                                 if (nrow(summ) > 1) "trend.ice raw daycount", "Sea Ice Index v4 (NASA Team)"),
+                 col = c("#1f5fa8", if (nrow(summ) > 1) "#1f5fa8", "#c0392b"),
+                 pch = c(19, if (nrow(summ) > 1) 4, 1), lty = c(1, if (nrow(summ) > 1) 0, 1), bty = "n")
+graphics::plot(anom(cmp$sii_mean_extent_Mkm2), anom(best), pch = 19, asp = 1,
                xlab = "Sea Ice Index anomaly (million km2)", ylab = "trend.ice anomaly (million km2)",
-               main = sprintf("anomalies, r = %.3f", summ$cor_anomaly))
+               main = sprintf("anomalies, r = %.3f", summ$cor_anomaly[nrow(summ)]))
 graphics::abline(0, 1, lty = 2)
 graphics::par(op)
 invisible(grDevices::dev.off())

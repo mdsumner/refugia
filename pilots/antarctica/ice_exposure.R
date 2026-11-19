@@ -5,7 +5,9 @@
 ## <ice_dir> holds ice_L9_<year>.rds and direct_pixels.csv from gadi/ice_sums.R.
 ##
 ## Annual cell values (area-weighted over the cell):
-##   daycount  mean days with ice (all observed area; 0 counts)
+##   daycount  mean days with ice (all observed area; 0 counts), adjusted
+##             for missing days (s_dayadj, see gadi/ice_sums.R) when the sums
+##             carry it; sums without it fall back to the raw daycount
 ##   duration  mean season length, retreat - advance (complete seasons only)
 ##   advance, retreat  mean day of the ice year (day 1 = Feb 15)
 ## A season value is used only when complete seasons cover at least half the
@@ -40,6 +42,8 @@ y1 <- if (length(a) > 3) as.integer(a[4]) else 2025L
 ff <- list.files(indir, "^ice_L9_[0-9]{4}[.]rds$", full.names = TRUE)
 d <- do.call(rbind, lapply(ff, readRDS))
 d <- d[d$year >= y0 & d$year <= y1, ]
+adj <- "s_dayadj" %in% names(d)
+cat("daycount:", if (adj) "adjusted for missing days" else "raw (sums have no s_dayadj)", "\n")
 years <- sort(unique(d$year))
 cat(length(ff), "files;", length(years), "years", min(years), "-", max(years), ";", length(unique(d$cell)), "cells\n")
 
@@ -52,6 +56,12 @@ gate$mean_daycount_sums <- gate$s_daycount / gate$w_obs
 gate$d_duration <- gate$mean_duration_sums - gate$mean_duration
 gate$d_daycount <- gate$mean_daycount_sums - gate$mean_daycount
 gate$d_area <- gate$w_season - gate$npix_season
+if (adj) {
+  g2 <- aggregate(s_dayadj ~ year, data = d, FUN = sum)
+  gate$mean_dayadj_sums <- g2$s_dayadj[match(gate$year, g2$year)] / gate$w_obs
+  gate$d_dayadj <- gate$mean_dayadj_sums - gate$mean_dayadj
+  stopifnot(max(abs(gate$d_dayadj)) < 1e-6)
+}
 tr <- function(x, t) unname(stats::coef(stats::lm(x ~ t))[2]) * 10
 gate_summary <- data.frame(
   max_abs_diff_duration = max(abs(gate$d_duration)), max_abs_diff_daycount = max(abs(gate$d_daycount)),
@@ -67,7 +77,7 @@ ok_season <- d$w_season >= 0.5 * d$w_obs & d$w_season > 0
 ann <- function(v, ok, w) data.frame(cell = d$cell[ok], year = d$year[ok], value = d[[v]][ok] / d[[w]][ok])
 out <- NULL
 for (v in c("daycount", "duration", "advance", "retreat")) {
-  x <- if (v == "daycount") ann("s_daycount", d$w_obs > 0, "w_obs") else ann(paste0("s_", v), ok_season, "w_season")
+  x <- if (v == "daycount") ann(if (adj) "s_dayadj" else "s_daycount", d$w_obs > 0, "w_obs") else ann(paste0("s_", v), ok_season, "w_season")
   t <- cell_trends(x, years)
   t <- t[t$n >= 0.75 * length(years), ]
   names(t)[-1] <- paste0(names(t)[-1], "_", v)

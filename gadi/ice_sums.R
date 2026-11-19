@@ -20,8 +20,13 @@
 ##   w_season   area with a complete season (advance, retreat and duration valid)
 ##   s_<v>, ss_<v> for v in advance, retreat, duration (over w_season) and
 ##   daycount (over w_obs): weighted sums and sums of squares.
+##   s_dayadj, ss_dayadj: daycount adjusted for missing days (over w_obs),
+##   daycount * ndays / (ndays - n_missing), ndays the days in the ice year
+##   (manifest nobs). The CDR has whole-grid gaps (13 days in ice year 1984,
+##   5 to 7 in 1985 and 1986) that otherwise count as days without ice; the
+##   adjustment assumes the missing days had the pixel's observed ice share.
 ## Also <outdir>/direct_pixels.csv: per ice year, the plain per-pixel mean of
-## duration and daycount on the native grid, for the gate.
+## duration, daycount and adjusted daycount on the native grid, for the gate.
 
 if (requireNamespace("pkgload", quietly = TRUE)) pkgload::load_all(quiet = TRUE) else
   invisible(lapply(list.files("R", full.names = TRUE), source))
@@ -42,9 +47,26 @@ cat(nrow(man), "ice years:", min(man$year), "-", max(man$year), "\n")
 
 ice_layers <- c("advance", "retreat", "duration", "daycount", "ice_at_start", "ice_at_end", "n_missing")
 read_year <- function(f) {
-  r <- terra::rast(paste0(if (remote) "/vsicurl/" else "", file.path(base, f)))
+  ## remote: download first, with retries, since the Acacia endpoint drops connections
+  src <- file.path(base, f)
+  if (remote) {
+    tf <- file.path(tempdir(), f)
+    for (k in 1:5) {
+      ok <- !inherits(try(utils::download.file(src, tf, mode = "wb", quiet = TRUE), silent = TRUE), "try-error")
+      if (!ok) unlink(tf)
+      if (ok && file.exists(tf)) break
+      Sys.sleep(5 * k)
+    }
+    if (!file.exists(tf)) stop("cannot read ", src)
+    src <- tf
+  }
+  r <- terra::rast(src)
   names(r) <- ice_layers
   r
+}
+dayadj <- function(v, ndays) {
+  nm <- v[, "n_missing"]; nm[is.na(nm)] <- 0
+  pmin(v[, "daycount"] * ndays / (ndays - nm), ndays)
 }
 
 ## one mapping for all years: the grid is fixed
@@ -71,7 +93,9 @@ for (i in seq_len(nrow(man))) {
   direct[[i]] <- data.frame(year = yr, npix_season = sum(!is.na(v[, "duration"])),
                             mean_duration = mean(v[, "duration"], na.rm = TRUE),
                             npix_obs = sum(!is.na(v[, "daycount"])),
-                            mean_daycount = mean(v[, "daycount"], na.rm = TRUE))
+                            mean_daycount = mean(v[, "daycount"], na.rm = TRUE),
+                            mean_dayadj = mean(dayadj(v, man$nobs[i]), na.rm = TRUE),
+                            median_n_missing = stats::median(v[, "n_missing"], na.rm = TRUE))
   if (file.exists(of)) next
   rs <- terra::disagg(r, sub)
   stopifnot(terra::ncol(rs) == g$dimension[["ncol"]], terra::nrow(rs) == g$dimension[["nrow"]])
@@ -89,6 +113,7 @@ for (i in seq_len(nrow(man))) {
     s_retreat = z(v[, "retreat"], season), ss_retreat = zz(v[, "retreat"], season),
     s_duration = z(v[, "duration"], season), ss_duration = zz(v[, "duration"], season),
     s_daycount = z(v[, "daycount"], obs), ss_daycount = zz(v[, "daycount"], obs),
+    s_dayadj = z(dayadj(v, man$nobs[i]), obs), ss_dayadj = zz(dayadj(v, man$nobs[i]), obs),
     index = idx)
   s$n <- NULL
   s <- s[s$w_obs > 0, ]
