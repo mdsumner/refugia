@@ -29,3 +29,5 @@ pixel is split into 5 x 5 sub-pixels of weight 1/25 so that level 9 cells
 (about 18 km, smaller than a pixel) get area-weighted shares. Bring
 `/g/data/jk72/$USER/refugia/ice_L9/` back whole (under 100 MB); the
 analysis is `pilots/antarctica/ice_exposure.R`, which also runs the gate.
+`ice_sums.R` downloads each COG with retries and also runs from the cloud
+sessions (about 8 minutes for 46 years), since Acacia is reachable there.
