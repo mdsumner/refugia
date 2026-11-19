@@ -94,8 +94,10 @@ map: `refugia_candidates_map.png` from `pilots/australia/candidate_map.R`.
 - [x] sea ice: daycount, duration, advance and retreat trend, signal-to-noise, velocity and persistence from trend.ice at level 9, scored within the five trend.ice sectors (CCAMLR area carried per cell); see `pilots/antarctica/README.md`
 - [x] gate: Southern Ocean mean duration trend from cell sums matches a direct per-pixel computation from the trend.ice COGs
 - [x] external check: integrated ice days from the cell sums against NSIDC Sea Ice Index v4 daily extent (anomaly r = 0.99); daycount adjusted for CDR missing days (1984-1986)
-- [ ] ocean: SST trend south of 60S from trend.sst sums
-- [ ] land: ice-free fraction per cell from the controlledburn rock outcrop burn; exposure from ERA5 summer temperature; scored against ACBRs
+- [x] ocean: summer (Jan-Mar) open-water SST trend, signal-to-noise and velocity south of 60S at level 9 from OISST v2.1 pixels (trend.sst sums are level 5 only); gate passes; see `pilots/antarctica/README.md`
+- [x] land: ice-free fraction per level 13 cell from the rock outcrop v7.3 polygons (exact spherical intersection, no raster)
+- [ ] land: exposure from ERA5 summer temperature; scored against ACBRs
+- [ ] land: compare with the AADC ice-free layer (Toth and Terauds 2023) and the controlledburn burn
 - [ ] confirm best current ice-free source with colleagues (see `notes/data_sources.md`)
 
 ### Checks

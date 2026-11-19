@@ -107,3 +107,86 @@ Caveats:
   years weigh on every trend.
 - Percentile flags select a share by construction (top quarter of trends).
 - 25 km passive microwave: coastal polynyas and fast ice are not resolved.
+
+## Sea surface temperature south of 60S (OISST v2.1, S2 level 9)
+
+trend.sst holds OISST sums on level 5 cells only (about 290 km), too coarse
+next to the sea ice cells, so this reads the daily OISST pixels again from
+NOAA's public bucket (the files the raad.virtualize index on source.coop
+points to).
+
+1. `Rscript sources/oisst_south.R <oisst_dir> 1982 2025 8`: per calendar
+   year and pixel south of 60S, sums of SST over all days, over Jan-Mar,
+   and over open-water days (ice concentration below 15%), and ice-day
+   counts. About 28 GB read, about 20 minutes from a cloud session; 44
+   years, no missing days.
+2. `Rscript pilots/antarctica/sst_exposure.R <oisst_dir> <outdir>`: cell
+   sums per year (pixels split 3 x 3, true area weights), the gate, and per
+   cell climatology, trend, signal-to-noise and velocity of summer SST.
+   Summer SST is the Jan-Mar mean over open-water days (at least 30).
+   Scored within the sectors on the summer open-water zone (mean Jan-Mar
+   ice share below 0.5). Candidate SST holdout: summer SST trend in the
+   sector's lowest quarter, and cooling or a warming velocity in the lowest
+   quarter of the sector's warming cells.
+3. `Rscript pilots/antarctica/sst_map.R <outdir>`: `sst_candidates_map.png`.
+
+Why open-water days: OISST sets SST under ice from its ice concentration,
+and its ice input is not homogeneous. Against the NSIDC CDR daycount, the
+OISST ice share south of 60S steps up by about 12% in 2005 (ratio 2.10-2.19
+for 1982-2004, 2.31-2.63 from 2005), so all-day SST trends in the ice zone
+follow that step.
+
+### Results (1982-2025)
+
+Gate: the area mean SST south of 60S per year from the cell sums equals the
+pixel area mean to 3e-14 deg C. 44,862 cells in the summer open-water zone.
+
+| sector | cells | summer SST (deg C) | summer SST trend (deg C per decade) | snr | warming share | abs(snr) >= 2 | candidates |
+|---|---|---|---|---|---|---|---|
+| Weddell | 10,079 | 0.02 | 0.04 [-0.01, 0.09] | 0.4 | 0.85 | 0.02 | 2,308 |
+| Indian | 7,173 | 0.73 | 0.03 [-0.02, 0.09] | 0.4 | 0.74 | 0.02 | 1,793 |
+| W Pacific | 5,369 | 1.34 | 0.02 [-0.04, 0.12] | 0.2 | 0.66 | 0.03 | 1,342 |
+| Ross | 11,634 | 0.11 | 0.01 [-0.06, 0.13] | 0.1 | 0.56 | 0.02 | 2,909 |
+| Bell-Amundsen | 10,607 | 1.50 | -0.08 [-0.17, 0.04] | -0.5 | 0.22 | 0.03 | 2,652 |
+
+- Summer surface warming south of 60S is small (area mean +0.04 deg C per
+  decade) and indistinguishable from interannual variability almost
+  everywhere: abs(snr) >= 2 in 2-3% of cells, so the SST candidates are a
+  ranking within the noise rather than detected holdouts.
+- The Bellingshausen and Amundsen open ocean cooled in summer, where the
+  ice season shortened most; the central Pacific sector and the eastern
+  Ross gyre warmed most.
+- Open-water days are a sample that changes with the ice: where ice
+  lingers longer into summer, the remaining open-water days are fewer and
+  later.
+
+## Ice-free land (rock outcrop v7.3, S2 level 13)
+
+`Rscript sources/icefree_cells.R <rock_gpkg> <outdir>` intersects the
+25,954 rock outcrop polygons (Burton-Johnson et al., medium resolution v7.3,
+from AustralianAntarcticDivision/rema.proc) with the level 13 cells that
+cover them, on the sphere, so the area per cell is exact for the polygons
+and no dense raster is needed (24 s). Gate: the cell areas sum to the
+polygon areas (rel. diff 1e-10). `icefree_summary.R` gives the sector table
+and `icefree_map.png` (level 9 shares).
+
+72,201 km2 of outcrop in 143,464 level 13 cells (3,357 level 9 cells):
+
+| sector | rock km2 | share | level 13 cells | cells at least half ice-free | median fraction |
+|---|---|---|---|---|---|
+| Peninsula | 13,180 | 0.18 | 38,072 | 5,088 | 0.15 |
+| Weddell | 5,274 | 0.07 | 11,023 | 3,268 | 0.26 |
+| Indian | 10,751 | 0.15 | 15,974 | 6,528 | 0.35 |
+| W Pacific | 6,128 | 0.09 | 10,615 | 4,024 | 0.34 |
+| Ross | 31,069 | 0.43 | 56,173 | 20,535 | 0.32 |
+| Bell-Amundsen | 5,799 | 0.08 | 11,607 | 3,785 | 0.29 |
+
+(Peninsula: north of 75S, 80W to 55W.)
+
+- 72,000 km2 is about three times the published rock outcrop area from
+  the high-resolution Landsat classification (about 21,700 km2); the
+  medium-resolution polygons are generalised outlines. The AADC ice-free
+  layer (Toth and Terauds 2023) is the comparison to make, but
+  data.aad.gov.au is not reachable from the cloud sessions.
+- No exposure yet: ERA5 summer temperature (or a coastal link to the
+  sea ice and SST cells) and the ACBRs are the next inputs.
