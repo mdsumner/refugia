@@ -299,3 +299,37 @@ its rock. Same holdout rule, ACBR as the reference region.
 - The shared tables (`pilots/export_cells.R`) use the ACBR scoring for
   Antarctic land when `land_refugium_acbr` is present.
 
+
+## Antarctic Ecosystem Inventory per cell (Toth et al. 2024)
+
+`gadi/aei.pbs` (on Gadi) sums the 100 m inventory rasters into level 13
+cells; `Rscript pilots/antarctica/aei_summary.R <aei_L13> <era5_out> <outdir>`
+compares the ice-free footprint with rock outcrop v7.3 and gives the Tier 2
+habitat make-up of the land holdout candidates. First run, 2026-11-20
+(class tables and the 2014-15 temperature sums not yet back from Gadi):
+
+- Inventory ice-free area (Tier 1) is 89,050 km2 in 153,924 cells, against
+  72,201 km2 in 143,464 cells for rock outcrop v7.3 (ratio 1.23, 1.14 to
+  1.50 by ACBR; South Orkney Islands is missing from the inventory, 8
+  against 105 km2). 139,730 cells hold both; cells in only one layer carry
+  little area (1,825 km2 inventory-only, 551 km2 rock-only).
+- Tier 2 (34 habitat codes present): candidates hold the same habitat mix
+  as ice-free land overall to within a factor of about 1.5 for the large
+  habitats, with one strong exception, habitat 31 (3.7% of ice-free area,
+  0.6% of candidate area). The rasters' .vat.dbf tables carry only VALUE
+  and COUNT, so the habitat names have to come from the inventory's
+  documentation (Toth et al.) as a lookup table.
+- Habitats per cell: 2.15 in candidate cells, 2.07 elsewhere.
+- 100 m temperature (2014-15 abiotic predictors, cell means over all
+  pixels of each ice-free level 13 cell): annual mean median -20.8 deg C.
+  Against the ERA5 summer climatology of the level 9 parent, r = 0.95
+  across cells, so the two agree on the large-scale pattern.
+- Within a level 9 (ERA5-scale) cell the 100 m field varies little: median
+  sd of the level 13 means 0.35 deg C (0.05 to 0.60 by ACBR). 14,244 level
+  13 cells (9%) are "locally cool" (at least 1 deg C below their level 9
+  cell, with 3+ ice-free neighbours); 4,275 of those lie in land holdout
+  candidates, cells that are buffered at both scales (macro: slow ERA5
+  warming; micro: cooler than their surroundings). Table:
+  `aei_temperature_by_acbr.csv`.
+- The 2014-15 fields are one season, so they describe present conditions
+  only; they rank cells within a parent, not change.
