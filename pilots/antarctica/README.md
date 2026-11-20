@@ -188,5 +188,69 @@ and `icefree_map.png` (level 9 shares).
   medium-resolution polygons are generalised outlines. The AADC ice-free
   layer (Toth and Terauds 2023) is the comparison to make, but
   data.aad.gov.au is not reachable from the cloud sessions.
-- No exposure yet: ERA5 summer temperature (or a coastal link to the
-  sea ice and SST cells) and the ACBRs are the next inputs.
+- Exposure from ERA5 summer temperature is below; the ACBRs (and a
+  coastal link to the sea ice and SST cells) are still to add.
+
+## Summer air temperature on ice-free land (ERA5, S2 level 9)
+
+1. `python3 -I sources/era5_south.py <era5_dir> 1980 2026 8`: reads the
+   hourly 2 m temperature (0.25 deg) from the NSF NCAR ERA5 copy on AWS
+   (public bucket `nsf-ncar-era5`) with HTTP range requests, so only the
+   HDF5 chunks south of 60S are fetched. Per month and pixel: hours, sum of
+   temperature, positive degree hours and hours above 0 deg C, for
+   December to February of each summer (summer Y is Dec Y-1 to Feb Y).
+   141 months, about 40 minutes from a cloud session with 8 workers, 739 MB
+   of monthly sums.
+2. `Rscript pilots/antarctica/era5_exposure.R <era5_dir> <icefree_dir>
+   <outdir>`: level 9 cell sums per summer (pixels split 3 x 3, true area
+   weights), the gate, per cell climatology, trend, signal-to-noise and
+   velocity of summer mean temperature and of positive degree days, scored
+   within sectors on the 3,357 level 9 cells that hold ice-free rock.
+   Candidate land holdout, the same rule as for SST: summer temperature
+   trend in the sector's lowest quarter, and cooling or a warming velocity
+   in the lowest quarter of the sector's warming cells. Level 13 ice-free
+   cells take their level 9 parent's values (`icefree_exposure_L13`), as
+   the Australian level 13 cells take AGCD from level 10.
+3. `Rscript pilots/antarctica/era5_map.R <outdir>`: `era5_icefree_map.png`.
+
+### Results (summers 1980-2026)
+
+Gate: the area mean summer temperature south of 60S from the cell sums
+equals the pixel area mean to 2e-13 deg C (trend +0.044 deg C per decade
+both ways).
+
+Ice-free level 9 cells, median [10th, 90th percentile]:
+
+| sector | cells | rock km2 | summer T (deg C) | trend (deg C per decade) | snr | positive degree days | warming share | abs(snr) >= 2 | candidates (rock km2) |
+|---|---|---|---|---|---|---|---|---|---|
+| Peninsula | 858 | 13,203 | -4.3 [-12.0, 0.2] | 0.03 [-0.06, 0.23] | 0.2 | 7 [0, 66] | 0.60 | 0.02 | 215 (4,222) |
+| Weddell | 364 | 5,274 | -15.5 [-20.0, -8.3] | 0.39 [0.16, 0.68] | 1.8 | 0 | 0.94 | 0.41 | 79 (860) |
+| Indian | 525 | 10,751 | -10.7 [-18.5, -3.6] | 0.02 [-0.12, 0.14] | 0.1 | 0 [0, 11] | 0.57 | 0.00 | 131 (4,145) |
+| W Pacific | 274 | 6,248 | -17.6 [-23.2, -4.7] | 0.02 [-0.06, 0.22] | 0.1 | 0 [0, 6] | 0.57 | 0.00 | 69 (1,600) |
+| Ross | 983 | 30,950 | -13.8 [-23.2, -7.0] | 0.09 [-0.07, 0.62] | 0.6 | 0 [0, 1] | 0.67 | 0.33 | 246 (8,225) |
+| Bell-Amundsen | 353 | 5,775 | -13.8 [-20.8, -5.5] | 0.10 [-0.04, 0.26] | 0.4 | 0 [0, 1] | 0.78 | 0.01 | 88 (2,031) |
+
+- Summer warming over ice-free land since 1980 is small and mostly within
+  interannual variability, except in two places: the Weddell sector
+  nunataks (Dronning Maud Land west, Shackleton Range; about +0.4 deg C
+  per decade, mostly after 2010) and the southern Victoria Land / Dry
+  Valleys block of the Ross sector (above +0.3).
+- The Peninsula shows almost no summer trend over 1980-2026, consistent
+  with the warming before 2000 and the pause after it; its coastal cells
+  are the only ones with many positive degree days.
+- Candidates (828 of 3,357 cells, 39,425 level 13 cells): the west coast
+  of the Peninsula and the Ellsworth Land coast, the Transantarctic
+  Mountains south of the Dry Valleys, the Prince Charles Mountains, and
+  scattered coastal oases in the Indian and W Pacific sectors.
+
+Caveats:
+
+- ERA5 at 0.25 deg is 7 to 14 km by 28 km here and a pixel over an oasis
+  is mostly ice, so these are regional summer conditions, not the rock
+  surface (macro, not micro, refugia).
+- ERA5 2 m temperature over the ice sheet is a model product constrained
+  by few stations; its interior trends (the Weddell and Victoria Land
+  signals) need checking against station records (for example READER)
+  before they are read as real.
+- Sectors stand in for the ACBRs until those polygons are added; the rule
+  ranks within each sector, so a quarter of every sector is flagged.

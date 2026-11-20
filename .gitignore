@@ -5,3 +5,4 @@ data/
 *.tif
 *.parquet
 *.zarr/
+__pycache__/

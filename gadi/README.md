@@ -4,6 +4,7 @@ Scripts to run on NCI Gadi, pulled via git. Outputs are small cell-sum files; br
 
 - `agcd_probe.sh`: find AGCD daily 0.05 deg files and variable names (login node)
 - `agcd_sums.R`, `agcd_sums.pbs`: AGCD to S2 level 10 cell sums per region and year
+- `aad_layers.sh`: ACBR, ASPA/ASMA (and later ACBR v2 and the Toth and Terauds ice-free layer) from data.aad.gov.au to GeoParquet and GeoPackage; data.aad.gov.au is blocked from the cloud sessions but open from Gadi (login node or copyq, inside the GDAL container)
 - `ice_sums.R`, `ice_sums.pbs`: trend.ice ice season COGs (Acacia) to S2 level 9 cell sums per ice year (copyq, needs network)
 
 The container image and project defaults follow imos-sor/nci (`jk72`, `gdal-r-python-extras` sif). AGCD layout on Gadi (from the NCI catalogue, 2026-11-18): `/g/data/zv2/agcd/<version>/<variable>/<mode>/<grid>/<frequency>/`, so `AGCD_DIR=/g/data/zv2/agcd/<version>` with `<mode>` = mean (tmax, tmin) or total (precip), `<grid>` = r005, `<frequency>` = 01day. Needs zv2 membership (applied for 2026-11-18). The version and file names are to be confirmed with the probe.
@@ -31,3 +32,15 @@ pixel is split into 5 x 5 sub-pixels of weight 1/25 so that level 9 cells
 analysis is `pilots/antarctica/ice_exposure.R`, which also runs the gate.
 `ice_sums.R` downloads each COG with retries and also runs from the cloud
 sessions (about 8 minutes for 46 years), since Acacia is reachable there.
+
+## AAD region layers
+
+    singularity exec $SIF bash gadi/aad_layers.sh /g/data/jk72/$USER/refugia/aad
+
+Reads the shapefiles over HTTP (`/vsicurl/` on the EDS
+`object/download?prefix=` URLs) and writes `<name>.parquet` and
+`<name>.gpkg` per layer. The Terauds et al. 2012 dataset holds ACBR v1 (15
+regions, 24,464 polygons); prefer ACBR v2 (Terauds and Lee 2016) once its
+EDS path is filled in. Bring the folder back to the project (a few MB) and
+`pilots/antarctica` scores the ice-free cells within ACBRs instead of
+sectors.
