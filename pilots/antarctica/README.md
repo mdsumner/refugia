@@ -233,8 +233,9 @@ Ice-free level 9 cells, median [10th, 90th percentile]:
 - Summer warming over ice-free land since 1980 is small and mostly within
   interannual variability, except in two places: the Weddell sector
   nunataks (Dronning Maud Land west, Shackleton Range; about +0.4 deg C
-  per decade, mostly after 2010) and the southern Victoria Land / Dry
-  Valleys block of the Ross sector (above +0.3).
+  per decade, mostly after 2010) and North Victoria Land in the Ross
+  sector (about +0.5; the ACBR table below places it there, not in the
+  Dry Valleys).
 - The Peninsula shows almost no summer trend over 1980-2026, consistent
   with the warming before 2000 and the pause after it; its coastal cells
   are the only ones with many positive degree days.
@@ -252,5 +253,49 @@ Caveats:
   by few stations; its interior trends (the Weddell and Victoria Land
   signals) need checking against station records (for example READER)
   before they are read as real.
-- Sectors stand in for the ACBRs until those polygons are added; the rule
-  ranks within each sector, so a quarter of every sector is flagged.
+- The rule ranks within each region, so about a quarter of every sector
+  (or ACBR) is flagged by construction.
+
+## Scored within ACBR v2
+
+`Rscript pilots/antarctica/acbr_score.R ACBRs_v2_2016.shp <era5_out> ACBR_Name`
+with the ACBR v2 polygons (Terauds 2016, AADC
+AAS_4296_Antarctic_Conservation_Biogeographic_Regions_v2; 24,776 polygons,
+16 regions). The ACBR polygons are ice-free outlines from an older layer
+than rock outcrop v7.3, so each level 13 cell takes the ACBR of the nearest
+polygon (median distance 0.16 km, 99th percentile 0.8 km). 132 cells (42
+km2) are more than 5 km from any ACBR polygon (Peter I Island, the Balleny
+Islands) and are left out. A level 9 cell takes the ACBR holding most of
+its rock. Same holdout rule, ACBR as the reference region.
+
+| ACBR | L9 cells | rock km2 | summer T (deg C) | trend (deg C per decade) | abs(snr) >= 2 | candidates L9 (L13) |
+|---|---|---|---|---|---|---|
+| Adelie Land |  37 |    171 | -5.6 [-6.9, -3.7] | -0.02 [-0.07, 0.08] | 0.00 |   9 (   102) |
+| Central south Antarctic Peninsula | 345 |  4,867 | -5.3 [-11.8, -2.5] | 0.08 [-0.03, 0.34] | 0.01 |  86 ( 3,081) |
+| Dronning Maud Land | 297 |  5,514 | -16.4 [-20.6, -9.4] | 0.32 [0.06, 0.68] | 0.30 |  73 ( 3,110) |
+| East Antarctica |  59 |  1,076 | -4.4 [-12.5, -1.8] | -0.02 [-0.08, 0.04] | 0.00 |  15 (   794) |
+| Ellsworth Land |  64 |    218 | -5.6 [-8.6, -2.8] | 0.11 [0.05, 0.18] | 0.00 |  13 (   170) |
+| Ellsworth Mountains |  87 |  2,940 | -16.7 [-20.3, -12.8] | 0.05 [-0.05, 0.18] | 0.00 |  22 ( 1,994) |
+| Enderby Land | 203 |  2,126 | -7.4 [-14.6, -3.2] | 0.01 [-0.07, 0.11] | 0.00 |  51 ( 1,484) |
+| Marie Byrd Land | 152 |  1,148 | -9.6 [-17.3, -6.9] | -0.03 [-0.06, 0.06] | 0.00 |  38 (   624) |
+| North Victoria Land | 383 |  9,451 | -13.5 [-20.3, -5.6] | 0.52 [0.26, 0.81] | 0.84 |  65 ( 2,785) |
+| North-east Antarctic Peninsula |  38 |  1,316 | -1.2 [-4.7, -0.3] | -0.03 [-0.06, 0.02] | 0.00 |  10 (   601) |
+| North-west Antarctic Peninsula | 339 |  4,796 | -0.8 [-5.4, 0.8] | 0.04 [-0.05, 0.13] | 0.05 |  85 ( 3,943) |
+| Prince Charles Mountains | 229 |  5,983 | -12.3 [-19.0, -5.9] | -0.01 [-0.15, 0.16] | 0.00 |  57 ( 2,532) |
+| South Antarctic Peninsula | 217 |  2,932 | -11.7 [-13.5, -8.0] | -0.02 [-0.08, 0.16] | 0.00 |  54 ( 3,015) |
+| South Orkney Islands |  11 |    105 | 0.3 [0.1, 0.4] | -0.03 [-0.05, -0.02] | 0.00 |   3 (    58) |
+| South Victoria Land | 195 | 10,293 | -13.6 [-21.1, -7.3] | 0.03 [-0.09, 0.28] | 0.03 |  49 ( 3,776) |
+| Transantarctic Mountains | 690 | 19,223 | -18.3 [-24.2, -10.9] | 0.06 [-0.08, 0.40] | 0.09 | 173 (10,947) |
+
+- 803 level 9 candidates (39,016 level 13 cells) against 828 with
+  sectors; 560 cells are flagged either way. The rest move where an ACBR
+  splits a sector by climate: within Ross, North Victoria Land (strong
+  warming) is now ranked apart from South Victoria Land and the
+  Transantarctic Mountains (little trend).
+- North Victoria Land (+0.52, 84% of cells with abs(snr) >= 2) and
+  Dronning Maud Land (+0.32, 30%) are the only regions where summer
+  warming stands clear of the noise in ERA5; both need a station check.
+  Elsewhere the median trend is within 0.1 deg C per decade of zero.
+- The shared tables (`pilots/export_cells.R`) use the ACBR scoring for
+  Antarctic land when `land_refugium_acbr` is present.
+

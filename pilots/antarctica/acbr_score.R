@@ -12,7 +12,7 @@
 ## outlines labelled by region, drawn from an older outcrop layer than rock
 ## outcrop v7.3, so the outlines do not match. Each level 13 ice-free cell
 ## takes the ACBR of the nearest ACBR polygon to its centre (with the
-## distance kept), and each level 9 cell takes the ACBR holding most of its
+## distance kept; cells more than 5 km from any are left out), and each level 9 cell takes the ACBR holding most of its
 ## rock area. The holdout rule is unchanged (era5_exposure.R), with ACBR as
 ## the reference region; ACBRs with fewer than 8 level 9 cells are not
 ## scored.
@@ -45,11 +45,15 @@ p <- s2::s2_cell_center(s2::as_s2_cell(c13$cell))
 k <- s2::s2_closest_feature(p, g)
 c13$acbr <- lab[k]
 c13$acbr_dist_km <- s2::s2_distance(p, g[k]) / 1000
+## islands outside the ACBRs (Peter I, Balleny) are left unassigned
+far <- c13$acbr_dist_km > 5
+cat(sum(far), "level 13 cells,", round(sum(c13$rock_km2[far]), 1), "km2 of rock, more than 5 km from any ACBR polygon: unassigned\n")
+c13$acbr[far] <- NA
 cat(sprintf("nearest ACBR polygon: median %.2f km, 99th percentile %.1f km, max %.1f km\n",
             stats::median(c13$acbr_dist_km), stats::quantile(c13$acbr_dist_km, 0.99), max(c13$acbr_dist_km)))
 
 o <- readRDS(file.path(dir, "era5_exposure_L9.rds"))
-ra <- stats::aggregate(rock_km2 ~ parent9 + acbr, data = c13, FUN = sum)
+ra <- stats::aggregate(rock_km2 ~ parent9 + acbr, data = c13[!is.na(c13$acbr), ], FUN = sum)
 ra <- ra[order(ra$parent9, -ra$rock_km2), ]
 ra <- ra[!duplicated(ra$parent9), ]
 o$acbr <- ra$acbr[match(o$cell, ra$parent9)]
@@ -78,7 +82,7 @@ summ <- do.call(rbind, lapply(sort(unique(z$acbr)), function(r) {
              snr2_share = round(mean(abs(x$snr_t) >= 2, na.rm = TRUE), 2),
              scored = !(r %in% small), refugium_L9 = sum(x$land_refugium_acbr),
              same_as_sector_rule = sum(x$land_refugium_acbr & x$land_refugium),
-             refugium_L13 = sum(c13$land_refugium_acbr[c13$acbr == r]))
+             refugium_L13 = sum(c13$land_refugium_acbr[c13$acbr %in% r]))
 }))
 print(summ, row.names = FALSE)
 write.csv(summ, file.path(dir, "era5_exposure_acbr_summary.csv"), row.names = FALSE)

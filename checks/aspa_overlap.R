@@ -48,11 +48,14 @@ touch <- function(cells, gg) {
 
 ## land: level 13 ice-free cells
 c13 <- readRDS(file.path(dir, "era5_out", "icefree_exposure_L13.rds"))
+## candidates scored within ACBR v2 when pilots/antarctica/acbr_score.R has run
+cand <- if ("land_refugium_acbr" %in% names(c13)) "land_refugium_acbr" else "land_refugium"
+cat("candidates:", cand, "\n")
 hit <- touch(c13$cell, g)
 c13$aspa <- vapply(hit, function(i) paste(sort(unique(asp$ASPA_No[i])), collapse = " "), "")
 c13$in_aspa <- lengths(hit) > 0
 write.csv(c13[c13$in_aspa, c("cell", "lon", "lat", "sector", "rock_km2", "icefree_frac",
-                             "land_refugium", "aspa")],
+                             cand, "aspa")],
           file.path(outdir, "aspa_cells_L13.csv"), row.names = FALSE)
 aspa_hit <- sort(unique(unlist(lapply(hit, function(i) asp$ASPA_No[i]))))
 cat(length(aspa_hit), "of", length(unique(asp$ASPA_No)), "ASPAs touch an ice-free level 13 cell\n")
@@ -60,7 +63,7 @@ cat(length(aspa_hit), "of", length(unique(asp$ASPA_No)), "ASPAs touch an ice-fre
 lv <- c("Peninsula", "Weddell", "Indian", "W Pacific", "Ross", "Bell-Amundsen")
 land <- do.call(rbind, lapply(c(lv, "all"), function(s) {
   x <- if (s == "all") c13 else c13[c13$sector == s, ]
-  r <- x$land_refugium %in% TRUE
+  r <- x[[cand]] %in% TRUE
   data.frame(sector = s, cells = nrow(x), rock_km2 = round(sum(x$rock_km2)),
              cells_in_aspa = sum(x$in_aspa), share_in_aspa = round(mean(x$in_aspa), 4),
              candidates = sum(r), candidates_in_aspa = sum(x$in_aspa & r),

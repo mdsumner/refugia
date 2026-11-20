@@ -87,24 +87,34 @@ F$sst <- schema_flags(sst, c(sst_holdout = "sst_refugium"), "antarctic_ocean", 9
 ## Antarctica, level 9 and 13: ice-free land, ERA5 summer temperature
 land <- readRDS(file.path(dir, "era5_out", "era5_exposure_L9.rds"))
 land <- land[land$icefree %in% TRUE, ]
+l13 <- readRDS(file.path(dir, "era5_out", "icefree_exposure_L13.rds"))
+## scored within ACBR v2 where acbr_score.R has run, else within sectors
+use_acbr <- "land_refugium_acbr" %in% names(land)
+if (use_acbr) {
+  land <- land[!is.na(land$acbr), ]; l13 <- l13[!is.na(l13$acbr), ]
+  land$region <- land$acbr; l13$region <- l13$acbr; rs <- "ACBR v2"
+  land$pct_t <- land$warming_pct_acbr; land$pct_v <- land$warm_velocity_pct_acbr
+  land$cand <- land$land_refugium_acbr; l13$cand <- l13$land_refugium_acbr
+} else {
+  land$region <- land$sector; l13$region <- l13$sector; rs <- "sector (Peninsula split)"
+  land$pct_t <- land$warming_pct; land$pct_v <- land$warm_velocity_pct
+  land$cand <- land$land_refugium; l13$cand <- l13$land_refugium
+}
 M$land <- schema_metrics(land, rbind(
   S(c("clim_t", "summer_t2m", "clim", "deg C")), S(c("slope_decade_t", "summer_t2m", "trend_decade", "deg C")),
   S(c("snr_t", "summer_t2m", "snr", "1")), S(c("velocity_km_decade_t", "summer_t2m", "velocity_km_decade", "km")),
-  S(c("warming_pct", "summer_t2m", "pct_trend_decade", "1")),
-  S(c("warm_velocity_pct", "summer_t2m", "pct_velocity_km_decade", "1")),
+  S(c("pct_t", "summer_t2m", "pct_trend_decade", "1")),
+  S(c("pct_v", "summer_t2m", "pct_velocity_km_decade", "1")),
   S(c("clim_pdd", "summer_pdd", "clim", "deg C days")), S(c("slope_decade_pdd", "summer_pdd", "trend_decade", "deg C days")),
   S(c("snr_pdd", "summer_pdd", "snr", "1")), S(c("rock_km2", "icefree", "extent", "km2"))),
   domain = "antarctic_land", source = "ERA5 (NSF NCAR copy) + rock outcrop v7.3", period = "1980-2026",
-  level = 9, region_set = "sector (Peninsula split)", region = "sector")
-F$land <- schema_flags(land, c(land_holdout = "land_refugium"), "antarctic_land", 9,
-                       "sector (Peninsula split)", "sector")
-l13 <- readRDS(file.path(dir, "era5_out", "icefree_exposure_L13.rds"))
+  level = 9, region_set = rs, region = "region")
+F$land <- schema_flags(land, c(land_holdout = "cand"), "antarctic_land", 9, rs, "region")
 M$l13 <- schema_metrics(l13, rbind(S(c("rock_km2", "icefree", "extent", "km2")),
                                    S(c("icefree_frac", "icefree", "persistence", "fraction"))),
   domain = "antarctic_land", source = "rock outcrop v7.3", period = "static",
-  level = 13, region_set = "sector (Peninsula split)", region = "sector")
-F$l13 <- schema_flags(l13, c(land_holdout = "land_refugium"), "antarctic_land", 13,
-                      "sector (Peninsula split)", "sector")
+  level = 13, region_set = rs, region = "region")
+F$l13 <- schema_flags(l13, c(land_holdout = "cand"), "antarctic_land", 13, rs, "region")
 
 metrics <- do.call(rbind, M); rownames(metrics) <- NULL
 flags <- do.call(rbind, F); rownames(flags) <- NULL
@@ -121,14 +131,14 @@ rules <- data.frame(
                "(persistence only)",
                "ice-day trend in the sector's top quarter (least loss) AND (gain OR loss velocity in the lowest quarter)",
                "summer SST trend in the sector's lowest quarter AND (cooling OR warming velocity in the lowest quarter)",
-               "summer 2 m temperature trend in the sector's lowest quarter AND (cooling OR warming velocity in the lowest quarter)"),
+               "summer 2 m temperature trend in the ACBR's lowest quarter AND (cooling OR warming velocity in the lowest quarter)"),
   persistence = c("(exposure only)",
                   "natural pixel wet in >= 90% of 20+ observed years, or 3 pixels wet in >= 50%",
                   "dry-year green cover ratio in the region's top quarter and green cover above the region median (MacDonnell only)",
                   "ice season in >= 90% of years",
                   "(summer open-water zone)",
                   "ice-free rock present (rock outcrop v7.3)"),
-  region_set = c("IBRA7", "IBRA7", "IBRA7", "trend.ice sector", "trend.ice sector", "sector (Peninsula split)"))
+  region_set = c("IBRA7", "IBRA7", "IBRA7", "trend.ice sector", "trend.ice sector", "ACBR v2"))
 write.csv(rules, file.path(outdir, "rules.csv"), row.names = FALSE)
 
 ## bridge summary: same quantities for every domain
