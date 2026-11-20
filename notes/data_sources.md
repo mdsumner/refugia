@@ -92,3 +92,23 @@ H.S., Wen, W. and Lee, J.R. (2024) Antarctic Specially Protected Areas
 Centre, doi:10.26179/4qk0-cz71 (AADC dataset AAS_4296_Updated_ASPAs_2024,
 22 files, 2.31 MB). Use its polygon layer for the protected-area overlap;
 the point layer marks ASPAs too small to draw.
+
+ACBR and ice-free ecosystem sources (found by Michael on the AADC, 2026-11-20):
+
+- **ACBR v2**: "An update of the Antarctic Conservation Biogeographic
+  Regions (ACBRs)", Terauds (2016), AADC record
+  AAS_4296_Antarctic_Conservation_Biogeographic_Regions_v2. 16 regions,
+  covers all ice-free areas, shapefiles. It supersedes the v1 ACBR shapefile
+  in ASAC_3095_Antarctic_Biogeography_shapefiles (Terauds et al. 2012, built
+  on the ADD v5 ice-free map), so scoring uses v2; v1 is kept only as the
+  record of what `gadi/aad_layers.sh` first fetched.
+- **Antarctic Ecosystem Inventory**: Toth, Terauds, Chown et al. (2024),
+  AADC record (as given) AAS_4568_The_Antarctic_Ecosystem_Inventory.
+  Ice-free land at 100 m in three tiers: 5 major environmental units
+  (Tier1_MEUs.tif), 31 habitat complexes (tier 2) and 309 regional
+  ecosystems (tier 3), plus abiotic rasters (elevation, slope, rugosity,
+  wind, radiation, mean temperature and degree days for 2014-15, precip,
+  melt, cloud) and a confidence raster. This is the better ice-free base
+  than rock outcrop v7.3 for the pilot: it gives the ice-free footprint and
+  habitat context per cell (share of each habitat as a mergeable area sum),
+  and the tier 2 habitats are the natural reference regions within an ACBR.
