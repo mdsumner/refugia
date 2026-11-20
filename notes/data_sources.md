@@ -70,3 +70,18 @@ expansion of ice-free ground over time needs a dated source (or the
 |---|---|
 | Australia | IBRA 7 regions and subregions, CAPAD, plus imos-sor EEZ (Perth Treaty), AMPs, IMCRA for coastal cells |
 | Antarctica | ACBRs, ASPAs, CCAMLR statistical areas and MPAs, AAT |
+
+Antarctic region layers come from the AADC EDS server, which the cloud
+sessions cannot reach; `gadi/aad_layers.sh` fetches them on Gadi. Checked
+2026-11-20 (Michael, Gadi, GDAL in the singularity container):
+
+    /vsicurl/https://data.aad.gov.au/eds/api/dataset/6825D031-0752-4F8E-82E4-F4DC3A88C6D6/object/download?prefix=Shapefiles%20from%20Terauds%20et%20al%202012%20DDI%2FACBRs%2FACBRs%20for%20export.shp
+
+opens as a polygon layer of 24,464 features in WGS 84 south polar
+stereographic (extent -2661826, -2118970 to 2596665, 2321752). This is ACBR
+version 1 (Terauds et al. 2012, 15 regions). Version 2 (Terauds and Lee
+2016, 16 regions) is the current definition and should replace it. The same
+dataset has ASPA/ASMA layers from October 2011 under
+`ASPAs/ERA_ASPA_ASMA_Oct2011/` (`ASMA_points_Aug2011.shp` confirmed; the
+ASPA polygons are to be found in that folder). A current ASPA layer would
+be better than the 2011 snapshot for the protected-area check.
