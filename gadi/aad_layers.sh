@@ -25,8 +25,14 @@
 ## 16 regions: adds the Prince Charles Mountains as region 16) is the current one
 ## and should replace v1 once its EDS address is found (see ACBR_V2 below).
 
+## STEPS picks sections (default all): acbr asma tiers abiotic, e.g.
+##   STEPS="tiers" bash gadi/aad_layers.sh <outdir>
+## Finished COGs are skipped, so a rerun only does what is missing.
+
 set -euo pipefail
 OUT=${1:-aad}
+STEPS=${STEPS:-acbr asma tiers abiotic}
+want () { case " $STEPS " in *" $1 "*) return 0;; *) return 1;; esac; }
 mkdir -p "$OUT"
 EDS=https://data.aad.gov.au/eds/api/dataset
 T12=$EDS/6825D031-0752-4F8E-82E4-F4DC3A88C6D6/object/download?prefix=
@@ -42,7 +48,7 @@ convert () {  # convert <src> <name>
 }
 
 ## 1. ACBR v1 (Terauds et al. 2012): ice-free polygons labelled by region
-convert "/vsicurl/${T12}${P12}%2FACBRs%2FACBRs%20for%20export.shp" acbr_v1_terauds2012
+want acbr && convert "/vsicurl/${T12}${P12}%2FACBRs%2FACBRs%20for%20export.shp" acbr_v1_terauds2012
 
 ## 2. ASPA / ASMA (October 2011 snapshot in the same dataset). Only single
 ##    objects can be fetched: a folder prefix returns NoSuchKey (checked
@@ -50,7 +56,7 @@ convert "/vsicurl/${T12}${P12}%2FACBRs%2FACBRs%20for%20export.shp" acbr_v1_terau
 ##    the AADC metadata page. The objects sit in the AADC S3 store under
 ##    aadc-datasets/ASAC_3095_Antarctic_Biogeography_shapefiles/. Confirmed:
 FOLDER="${T12}${P12}%2FASPAs%2FERA_ASPA_ASMA_Oct2011"
-convert "/vsicurl/${FOLDER}%2FASMA_points_Aug2011.shp" asma_points_2011 || true
+want asma && { convert "/vsicurl/${FOLDER}%2FASMA_points_Aug2011.shp" asma_points_2011 || true; }
 ##    ASPA polygons: add the file name when known, for example
 ##    convert "/vsicurl/${FOLDER}%2F<ASPA polygons>.shp" aspa_polygons_2011
 
@@ -69,6 +75,8 @@ AEI=$EDS/cb8c6d56-8a78-4032-a455-cb58cb4bb6de/object/download?prefix=AADC_4568_2
 T1="TIER%201%20Major%20Environmental%20Units"
 cog () {  # cog <url> <name> <resampling>
   local src=$1 name=$2 rs=${3:-nearest}
+  rm -f "$OUT/$name.tif.ovr.tmp"
+  [ -s "$OUT/$name.tif" ] && gdal raster info "$OUT/$name.tif" > /dev/null 2>&1 && { echo "have $OUT/$name.tif"; return 0; }
   gdal raster info "$src" > /dev/null 2>&1 || { echo "cannot open $src"; return 1; }
   gdal raster convert --overwrite --of COG --co COMPRESS=DEFLATE --co OVERVIEW_RESAMPLING=$rs \
     "$src" "$OUT/$name.tif"
@@ -82,12 +90,16 @@ cls () {  # cls <folder> <file stem> <name>
   cog "/vsicurl/${AEI}%2F$1%2F$2.tif" "$3" nearest || return 0
   curl -sSL -o "$OUT/$3.tif.vat.dbf" "${AEI}%2F$1%2F$2.tif.vat.dbf" || true
 }
-cls "$T1" Tier1_MEUs aei_tier1_meu
-cls "$T2" Tier2_HCs aei_tier2_habitat
-cls "$T3" Tier3_BETs_int aei_tier3_ecosystem
+if want tiers; then
+  cls "$T1" Tier1_MEUs aei_tier1_meu
+  cls "$T2" Tier2_HCs aei_tier2_habitat
+  cls "$T3" Tier3_BETs_int aei_tier3_ecosystem
+fi
 ## continuous: 2014-15 mean temperature and degree days above -5 deg C (100 m)
-for v in MeanTemp_1415_bm Total_DD_1415_minus5_bm; do
-  cog "/vsicurl/${AEI}%2F${AB}%2F${v}.tif" "aei_${v}" average || true
-done
+if want abiotic; then
+  for v in MeanTemp_1415_bm Total_DD_1415_minus5_bm; do
+    cog "/vsicurl/${AEI}%2F${AB}%2F${v}.tif" "aei_${v}" average || true
+  done
+fi
 
 ls -l "$OUT"

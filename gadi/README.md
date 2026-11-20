@@ -46,3 +46,16 @@ regions, 24,464 polygons); prefer ACBR v2 (Terauds and Lee 2016) once its
 EDS path is filled in. Bring the folder back to the project (a few MB) and
 `pilots/antarctica` scores the ice-free cells within ACBRs instead of
 sectors.
+
+## Antarctic Ecosystem Inventory to cells
+
+    qsub -P gv90 -l storage=gdata/jk72 gadi/aei.pbs
+
+Finishes the inventory COG downloads (`STEPS="tiers abiotic"` in
+`aad_layers.sh`, which skips finished COGs) and runs `gadi/aei_cells.R`:
+per S2 level 13 cell, area of each Tier 1/2/3 class and area-weighted sums
+of the 2014-15 mean temperature and degree days. Pixel areas are true areas
+(checked against `terra::cellSize` on a synthetic polar stereographic
+grid). Output `/g/data/jk72/$USER/refugia/aad/aei_L13/` is a few MB, so it
+can come back through the project chat or git instead of moving the 680 MB
+of temperature COGs.
