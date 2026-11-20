@@ -6,7 +6,11 @@
 ## Gadi (login node or copyq). Run inside the GDAL container (GDAL >= 3.11
 ## for the `gdal vector` CLI), for example
 ##
-##   singularity exec $SIF bash gadi/aad_layers.sh /g/data/jk72/$USER/refugia/aad
+##   module load singularity
+##   SIF=${SIF:-/g/data/jk72/$USER/sif_lib/gdal-r-python-extras_latest.sif}
+##   singularity exec -B /g/data "$SIF" bash gadi/aad_layers.sh /g/data/jk72/$USER/refugia/aad
+##
+## (the same image and default as gadi/agcd_sums.pbs and gadi/ice_sums.pbs)
 ##
 ## then bring the output folder back (rsync to Nectar, Acacia, or upload the
 ## files to the project). Files are read directly over HTTP with /vsicurl/;
@@ -50,12 +54,40 @@ convert "/vsicurl/${FOLDER}%2FASMA_points_Aug2011.shp" asma_points_2011 || true
 ##    ASPA polygons: add the file name when known, for example
 ##    convert "/vsicurl/${FOLDER}%2F<ASPA polygons>.shp" aspa_polygons_2011
 
-## 3. ACBR v2 (Terauds and Lee 2016) and the ice-free layer (Toth and Terauds
-##    2023, https://doi.org/10.26179/7mnh-j215): fill in the EDS dataset id
-##    and file path from the AADC metadata pages, then
-## ACBR_V2="/vsicurl/$EDS/<dataset-id>/object/download?prefix=<path-to>.shp"
-## convert "$ACBR_V2" acbr_v2_terauds_lee2016
-## The ice-free layer is a 100 m GeoTIFF; keep it as a COG instead:
-## gdal raster convert --of COG "/vsicurl/$EDS/<dataset-id>/object/download?prefix=<path-to>.tif" "$OUT/icefree_toth_terauds2023.tif"
+## 3. ACBR v2 (Terauds 2016): AADC record
+##    AAS_4296_Antarctic_Conservation_Biogeographic_Regions_v2. Michael
+##    downloaded the zip by hand (ACBRs_v2_2016.shp, field ACBR_Name); add
+##    its EDS URL here when known.
+
+## 4. Antarctic Ecosystem Inventory (Toth et al. 2024), EDS dataset
+##    cb8c6d56-8a78-4032-a455-cb58cb4bb6de, prefix AADC_4568_2024/. Rasters
+##    are 100 m GeoTIFFs; they are rewritten as COGs (nearest-neighbour
+##    overviews for the class rasters, average for continuous ones). The
+##    URLs below were all confirmed by Michael (2026-11-20). A missing object
+##    prints "cannot open" and the script goes on.
+AEI=$EDS/cb8c6d56-8a78-4032-a455-cb58cb4bb6de/object/download?prefix=AADC_4568_2024
+T1="TIER%201%20Major%20Environmental%20Units"
+cog () {  # cog <url> <name> <resampling>
+  local src=$1 name=$2 rs=${3:-nearest}
+  gdal raster info "$src" > /dev/null 2>&1 || { echo "cannot open $src"; return 1; }
+  gdal raster convert --overwrite --of COG --co COMPRESS=DEFLATE --co OVERVIEW_RESAMPLING=$rs \
+    "$src" "$OUT/$name.tif"
+  ls -l "$OUT/$name.tif"
+}
+T2="TIER%202%20Habitat%20Complexes"
+T3="TIER%203%20Bioregional%20ecosystem%20types"
+AB="${T1}%2FAbiotic%20predictors"
+## class rasters, each with its value attribute table as <name>.vat.dbf
+cls () {  # cls <folder> <file stem> <name>
+  cog "/vsicurl/${AEI}%2F$1%2F$2.tif" "$3" nearest || return 0
+  curl -sSL -o "$OUT/$3.tif.vat.dbf" "${AEI}%2F$1%2F$2.tif.vat.dbf" || true
+}
+cls "$T1" Tier1_MEUs aei_tier1_meu
+cls "$T2" Tier2_HCs aei_tier2_habitat
+cls "$T3" Tier3_BETs_int aei_tier3_ecosystem
+## continuous: 2014-15 mean temperature and degree days above -5 deg C (100 m)
+for v in MeanTemp_1415_bm Total_DD_1415_minus5_bm; do
+  cog "/vsicurl/${AEI}%2F${AB}%2F${v}.tif" "aei_${v}" average || true
+done
 
 ls -l "$OUT"

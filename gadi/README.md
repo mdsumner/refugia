@@ -35,7 +35,9 @@ sessions (about 8 minutes for 46 years), since Acacia is reachable there.
 
 ## AAD region layers
 
-    singularity exec $SIF bash gadi/aad_layers.sh /g/data/jk72/$USER/refugia/aad
+    module load singularity
+    SIF=${SIF:-/g/data/jk72/$USER/sif_lib/gdal-r-python-extras_latest.sif}
+    singularity exec -B /g/data "$SIF" bash gadi/aad_layers.sh /g/data/jk72/$USER/refugia/aad
 
 Reads the shapefiles over HTTP (`/vsicurl/` on single objects at the EDS
 `object/download?prefix=` URLs) and writes `<name>.parquet` and
