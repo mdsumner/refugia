@@ -30,11 +30,14 @@ names(ee)[1] <- "parent10"
 d <- merge(d, ee, by = "parent10", all.x = TRUE)
 ctr <- s2::s2_cell_center(s2::as_s2_cell(d$cell)); d$lon <- s2::s2_x(ctr); d$lat <- s2::s2_y(ctr)
 wc <- readRDS(file.path(dir, "wofs_L13", "water_cells_L13.rds"))
-d <- merge(d, wc[c("cell", "px_wet50_nat", "px_wet90_nat", "px_wet50_art", "px_wet90_art")],
-           by = "cell", all.x = TRUE)
-for (v in c("px_wet50_nat", "px_wet90_nat", "px_wet50_art", "px_wet90_art")) d[[v]][is.na(d[[v]])] <- 0
+if (is.null(wc$px_wet50_review)) wc$px_wet50_review <- 0
+pv <- c("px_wet50_nat", "px_wet90_nat", "px_wet50_art", "px_wet90_art", "px_wet50_review")
+d <- merge(d, wc[c("cell", pv)], by = "cell", all.x = TRUE)
+for (v in pv) d[[v]][is.na(d[[v]])] <- 0
 d$water_refugium <- d$px_wet90_nat >= 1 | d$px_wet50_nat >= 3
 d$water_artificial <- d$px_wet50_art > 0 & !d$water_refugium
+## water refugia resting on a "review" box of regions/water_exclusions.csv
+d$water_review <- d$water_refugium & d$px_wet50_review > 0
 d$green_refugium <- d$green_candidate %in% TRUE
 d$thermal_refugium <- d$thermal_candidate %in% TRUE
 ## the green dry-year flag is not used in Tasmania, where dry years are
@@ -46,7 +49,7 @@ saveRDS(d, file.path(dir, "refugia_candidates_L13.rds"))
 write.csv(d, file.path(dir, "refugia_candidates_L13.csv"), row.names = FALSE)
 summ <- do.call(rbind, lapply(split(d, d$ibra), function(x) data.frame(
   ibra = x$ibra[1], cells = nrow(x), water = sum(x$water_refugium),
-  water_artificial = sum(x$water_artificial), green = sum(x$green_refugium),
+  water_artificial = sum(x$water_artificial), water_review = sum(x$water_review), green = sum(x$green_refugium),
   thermal = sum(x$thermal_refugium), water_green = sum(x$water_refugium & x$green_refugium),
   green_thermal = sum(x$green_refugium & x$thermal_refugium),
   water_thermal = sum(x$water_refugium & x$thermal_refugium), all_three = sum(x$n_kinds == 3))))
