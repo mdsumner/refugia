@@ -1,0 +1,32 @@
+#!/bin/bash
+#PBS -q copyq
+#PBS -l ncpus=1
+#PBS -l mem=32GB
+#PBS -l walltime=06:00:00
+#PBS -l jobfs=10GB
+#PBS -l wd
+#PBS -j oe
+#PBS -N refugia-aei
+## Antarctic Ecosystem Inventory: finish the COG downloads (tiers 2 and 3,
+## anything else missing) and sum every raster into S2 level 13 cells, so
+## only small tables need to leave Gadi. copyq because the first step reads
+## data.aad.gov.au; a dropped login session does not stop it. From a clone of
+## the refugia repo on Gadi (git pull first):
+##
+##   qsub -P gv90 -l storage=gdata/jk72 gadi/aei.pbs
+##
+## Optional -v: AAD_DIR (default /g/data/jk72/$USER/refugia/aad), LEVEL (13).
+## Output: $AAD_DIR/aei_L13/ (a few MB of csv.gz). Resumable.
+set -euo pipefail
+module load singularity
+SIF=${SIF:-/g/data/jk72/$USER/sif_lib/gdal-r-python-extras_latest.sif}
+[ -f "$SIF" ] || { echo "no image at $SIF" >&2; exit 1; }
+AAD_DIR=${AAD_DIR:-/g/data/jk72/$USER/refugia/aad}
+LEVEL=${LEVEL:-13}
+export SINGULARITYENV_R_LIBS_USER=/nonexistent SINGULARITYENV_R_LIBS= SINGULARITYENV_PYTHONNOUSERSITE=1
+export SINGULARITYENV_STEPS="tiers abiotic"
+echo "start $(date -Is)"
+singularity exec -B /g/data "$SIF" bash gadi/aad_layers.sh "$AAD_DIR"
+singularity exec -B /g/data "$SIF" Rscript gadi/aei_cells.R "$AAD_DIR" "$AAD_DIR/aei_L$LEVEL" "$LEVEL"
+echo "done $(date -Is)"
+ls -lh "$AAD_DIR/aei_L$LEVEL"
