@@ -316,5 +316,20 @@ habitat make-up of the land holdout candidates. First run, 2026-11-20
 - Tier 2 (34 habitat codes present): candidates hold the same habitat mix
   as ice-free land overall to within a factor of about 1.5 for the large
   habitats, with one strong exception, habitat 31 (3.7% of ice-free area,
-  0.6% of candidate area). Habitat names wait for the class tables.
+  0.6% of candidate area). The rasters' .vat.dbf tables carry only VALUE
+  and COUNT, so the habitat names have to come from the inventory's
+  documentation (Toth et al.) as a lookup table.
 - Habitats per cell: 2.15 in candidate cells, 2.07 elsewhere.
+- 100 m temperature (2014-15 abiotic predictors, cell means over all
+  pixels of each ice-free level 13 cell): annual mean median -20.8 deg C.
+  Against the ERA5 summer climatology of the level 9 parent, r = 0.95
+  across cells, so the two agree on the large-scale pattern.
+- Within a level 9 (ERA5-scale) cell the 100 m field varies little: median
+  sd of the level 13 means 0.35 deg C (0.05 to 0.60 by ACBR). 14,244 level
+  13 cells (9%) are "locally cool" (at least 1 deg C below their level 9
+  cell, with 3+ ice-free neighbours); 4,275 of those lie in land holdout
+  candidates, cells that are buffered at both scales (macro: slow ERA5
+  warming; micro: cooler than their surroundings). Table:
+  `aei_temperature_by_acbr.csv`.
+- The 2014-15 fields are one season, so they describe present conditions
+  only; they rank cells within a parent, not change.

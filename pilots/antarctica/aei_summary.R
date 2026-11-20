@@ -89,3 +89,44 @@ utils::write.csv(rich, gzfile(file.path(outdir, "aei_cells_L13.csv.gz")), row.na
 cat(sprintf("\nmean habitats per cell: candidates %.2f, other ice-free cells %.2f\n",
             mean(rich$n_habitats[rich$cand %in% TRUE], na.rm = TRUE),
             mean(rich$n_habitats[!(rich$cand %in% TRUE)], na.rm = TRUE)))
+
+## 4. 100 m temperature context (2014-15 abiotic predictors), when present.
+##    The sums cover every pixel of each ice-free level 13 cell (ice
+##    included), so the values are cell means, not rock-only means.
+##    Within each level 9 cell (the ERA5 exposure scale) a level 13 cell is
+##    "locally cool" if its mean is at least 1 deg C below the area-weighted
+##    mean of the level 9 cell's ice-free level 13 cells: a micro-scale
+##    buffer inside a macro-scale exposure score.
+tf <- file.path(aei, "aei_MeanTemp_1415_bm_icefree_L13.csv.gz")
+df <- file.path(aei, "aei_Total_DD_1415_minus5_bm_icefree_L13.csv.gz")
+if (file.exists(tf) && file.exists(df)) {
+  tt <- utils::read.csv(tf); dd <- utils::read.csv(df)
+  m <- data.frame(cell = tt$cell, w = tt$w, t_1415 = tt$s / tt$w)
+  m$dd_1415 <- (dd$s / dd$w)[match(m$cell, dd$cell)]
+  m <- merge(m, cells[c("cell", "acbr", "cand", "rock_km2")], by = "cell", all.x = TRUE)
+  m$parent9 <- as.character(s2::s2_cell_parent(s2::as_s2_cell(m$cell), 9L))
+  pm <- tapply(m$w * m$t_1415, m$parent9, sum) / tapply(m$w, m$parent9, sum)
+  pn <- table(m$parent9)
+  m$t_parent9 <- as.vector(pm[m$parent9]); m$n_in_parent9 <- as.vector(pn[m$parent9])
+  m$t_anom <- m$t_1415 - m$t_parent9
+  m$locally_cool <- m$n_in_parent9 >= 3 & m$t_anom <= -1
+  m$era5_djf <- o9$clim_t[match(m$parent9, o9$cell)]
+  ok <- is.finite(m$era5_djf)
+  cat(sprintf("\n100 m mean T (2014-15) vs ERA5 DJF climatology over ice-free L13 cells: r = %.2f\n",
+              stats::cor(m$t_1415[ok], m$era5_djf[ok])))
+  tsum <- do.call(rbind, lapply(c(sort(setdiff(unique(m$acbr), c("(none)", NA))), "all"), function(r) {
+    x <- if (r == "all") m else m[m$acbr %in% r, ]
+    c1 <- x$cand %in% TRUE
+    data.frame(acbr = r, cells = nrow(x),
+               t_median = round(stats::median(x$t_1415), 1),
+               t_median_cand = round(stats::median(x$t_1415[c1]), 1),
+               dd_median = round(stats::median(x$dd_1415), 1),
+               dd_median_cand = round(stats::median(x$dd_1415[c1]), 1),
+               within_L9_sd = round(stats::median(tapply(x$t_1415, x$parent9, stats::sd), na.rm = TRUE), 2),
+               locally_cool = sum(x$locally_cool), locally_cool_in_cand = sum(x$locally_cool & c1),
+               cand_cells = sum(c1))
+  }))
+  print(tsum, row.names = FALSE)
+  utils::write.csv(tsum, file.path(outdir, "aei_temperature_by_acbr.csv"), row.names = FALSE)
+  utils::write.csv(m, gzfile(file.path(outdir, "aei_temperature_L13.csv.gz")), row.names = FALSE)
+}
