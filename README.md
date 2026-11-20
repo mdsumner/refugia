@@ -84,7 +84,7 @@ map: `refugia_candidates_map.png` from `pilots/australia/candidate_map.R`.
 - [x] AGCD v1-0-4 Tmax, Tmin and precipitation trend, signal-to-noise and velocity at level 10, 1971-2025 (run on Gadi, `gadi/`)
 - [x] artificial-water mask from Overture Maps (OSM) polygons; stricter water flag
 - [x] score within IBRA; joined candidate table per level 13 cell (rds/csv) and small-multiple map
-- [ ] candidate layer as COG and cell table as parquet
+- [x] candidate layer as COG and cell table as parquet (see shared outputs below)
 - [ ] gate: one IBRA subregion's cell-sum wet fraction equals a direct WOfS summary
 - [ ] hand-checked exclusions for unmapped artificial water near Alice Springs
 - [ ] Tasmanian replacement for the green flag (dry years are greener there)
@@ -96,9 +96,30 @@ map: `refugia_candidates_map.png` from `pilots/australia/candidate_map.R`.
 - [x] external check: integrated ice days from the cell sums against NSIDC Sea Ice Index v4 daily extent (anomaly r = 0.99); daycount adjusted for CDR missing days (1984-1986)
 - [x] ocean: summer (Jan-Mar) open-water SST trend, signal-to-noise and velocity south of 60S at level 9 from OISST v2.1 pixels (trend.sst sums are level 5 only); gate passes; see `pilots/antarctica/README.md`
 - [x] land: ice-free fraction per level 13 cell from the rock outcrop v7.3 polygons (exact spherical intersection, no raster)
-- [ ] land: exposure from ERA5 summer temperature; scored against ACBRs
+- [x] land: exposure from ERA5 summer 2 m temperature (DJF 1980-2026, NSF NCAR copy on AWS) at level 9, scored within sectors; level 13 ice-free cells take their parent's values
+- [ ] land: score against ACBRs (polygons to add)
 - [ ] land: compare with the AADC ice-free layer (Toth and Terauds 2023) and the controlledburn burn
 - [ ] confirm best current ice-free source with colleagues (see `notes/data_sources.md`)
+
+### Shared outputs (both domains)
+
+- [x] one long cell schema for every pilot (`R/schema.R`, `pilots/export_cells.R`): `cells_metrics` (domain, source, period, level, cell, lon, lat, region_set, region, variable, metric, value, units) and `cells_flags` (candidate kind per cell), as parquet (`sources/cells_parquet.py`); the candidate rule per domain in `rules.csv`; `bridge_summary.csv` gives cells, candidates and the share of cells with abs(snr) >= 2 per domain
+- [x] candidate layers as COGs (`pilots/export_cogs.R`): Tasmania and MacDonnell at 250 m in EPSG:3577, Antarctica at 5 km in EPSG:3031 (flags and trends)
+
+Same rule, different variable (`bridge_summary.csv`, 2026-11-20). Exposure
+candidates are the favourable quarter of trend and velocity within a
+region; snr is that of the main exposure variable:
+
+| domain | kind | level | cells | candidates | median trend per decade | share abs(snr) >= 2 |
+|---|---|---|---|---|---|---|
+| Australia land | thermal (Tmax) | 10 | 1,521 | 140 | +0.18 deg C | 0.45 |
+| Antarctic sea ice | holdout (ice days) | 9 | 47,839 | 7,584 | -1.4 days | 0.05 |
+| Southern Ocean | holdout (summer SST) | 9 | 44,862 | 11,004 | +0.015 deg C | 0.02 |
+| Antarctic ice-free land | holdout (summer 2 m T) | 9 | 3,357 | 828 | +0.06 deg C | 0.15 |
+
+The Australian warming signal has emerged from interannual noise in about
+half the cells; in the Antarctic domains it has in 2 to 15%, so there the
+candidates are rankings within the noise rather than detected holdouts.
 
 ### Checks
 
