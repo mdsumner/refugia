@@ -85,3 +85,10 @@ dataset has ASPA/ASMA layers from October 2011 under
 `ASPAs/ERA_ASPA_ASMA_Oct2011/` (`ASMA_points_Aug2011.shp` confirmed; the
 ASPA polygons are to be found in that folder). A current ASPA layer would
 be better than the 2011 snapshot for the protected-area check.
+
+Current ASPA layer (found by Michael, 2026-11-20): Terauds, A., Wauchope,
+H.S., Wen, W. and Lee, J.R. (2024) Antarctic Specially Protected Areas
+(Points and Polygons) 2024 Update, Ver. 1, Australian Antarctic Data
+Centre, doi:10.26179/4qk0-cz71 (AADC dataset AAS_4296_Updated_ASPAs_2024,
+22 files, 2.31 MB). Use its polygon layer for the protected-area overlap;
+the point layer marks ASPAs too small to draw.
