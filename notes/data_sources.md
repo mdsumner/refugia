@@ -112,3 +112,8 @@ ACBR and ice-free ecosystem sources (found by Michael on the AADC, 2026-11-20):
   than rock outcrop v7.3 for the pilot: it gives the ice-free footprint and
   habitat context per cell (share of each habitat as a mergeable area sum),
   and the tier 2 habitats are the natural reference regions within an ACBR.
+  EDS dataset id cb8c6d56-8a78-4032-a455-cb58cb4bb6de, objects under
+  `AADC_4568_2024/`, for example
+  `.../object/download?prefix=AADC_4568_2024%2FTIER%201%20Major%20Environmental%20Units%2FTier1_MEUs.tif`
+  (and `Tier1_MEUs.tif.vat.dbf`). Fetched on Gadi by `gadi/aad_layers.sh`
+  section 4, written as COGs.

@@ -50,12 +50,39 @@ convert "/vsicurl/${FOLDER}%2FASMA_points_Aug2011.shp" asma_points_2011 || true
 ##    ASPA polygons: add the file name when known, for example
 ##    convert "/vsicurl/${FOLDER}%2F<ASPA polygons>.shp" aspa_polygons_2011
 
-## 3. ACBR v2 (Terauds and Lee 2016) and the ice-free layer (Toth and Terauds
-##    2023, https://doi.org/10.26179/7mnh-j215): fill in the EDS dataset id
-##    and file path from the AADC metadata pages, then
-## ACBR_V2="/vsicurl/$EDS/<dataset-id>/object/download?prefix=<path-to>.shp"
-## convert "$ACBR_V2" acbr_v2_terauds_lee2016
-## The ice-free layer is a 100 m GeoTIFF; keep it as a COG instead:
-## gdal raster convert --of COG "/vsicurl/$EDS/<dataset-id>/object/download?prefix=<path-to>.tif" "$OUT/icefree_toth_terauds2023.tif"
+## 3. ACBR v2 (Terauds 2016): AADC record
+##    AAS_4296_Antarctic_Conservation_Biogeographic_Regions_v2. Michael
+##    downloaded the zip by hand (ACBRs_v2_2016.shp, field ACBR_Name); add
+##    its EDS URL here when known.
+
+## 4. Antarctic Ecosystem Inventory (Toth et al. 2024), EDS dataset
+##    cb8c6d56-8a78-4032-a455-cb58cb4bb6de, prefix AADC_4568_2024/. Rasters
+##    are 100 m GeoTIFFs; they are rewritten as COGs (nearest-neighbour
+##    overviews for the class rasters, average for continuous ones). The
+##    Tier 1 URLs are confirmed (Michael, 2026-11-20); the others follow the
+##    folder and file names in the AADC record description and may need
+##    correcting (a wrong name fails with NoSuchKey and the script goes on).
+AEI=$EDS/cb8c6d56-8a78-4032-a455-cb58cb4bb6de/object/download?prefix=AADC_4568_2024
+T1="TIER%201%20Major%20Environmental%20Units"
+cog () {  # cog <url> <name> <resampling>
+  local src=$1 name=$2 rs=${3:-nearest}
+  gdal raster info "$src" > /dev/null 2>&1 || { echo "cannot open $src"; return 1; }
+  gdal raster convert --overwrite --of COG --co COMPRESS=DEFLATE --co OVERVIEW_RESAMPLING=$rs \
+    "$src" "$OUT/$name.tif"
+  ls -l "$OUT/$name.tif"
+}
+## the class table travels beside the COG as <name>.vat.dbf
+cog "/vsicurl/${AEI}%2F${T1}%2FTier1_MEUs.tif" aei_tier1_meu nearest || true
+curl -sSL -o "$OUT/aei_tier1_meu.vat.dbf" "${AEI}%2F${T1}%2FTier1_MEUs.tif.vat.dbf" || true
+cog "/vsicurl/${AEI}%2F${T1}%2FConf1.tif" aei_tier1_confidence average || true
+## abiotic variables (2014-15 climate fields at 100 m)
+for v in MeanTemp_1415_bm Total_DD_1415_minus5_bm elevation_bm; do
+  cog "/vsicurl/${AEI}%2F${T1}%2FAbiotic%20Variables%2F${v}.tif" "aei_${v}" average || true
+done
+## Tier 2 (31 habitat complexes) and Tier 3 (309 regional ecosystems): fill
+## in the folder and file names from the record (or the EDS listing), e.g.
+## cog "/vsicurl/${AEI}%2F<TIER 2 folder>%2F<file>.tif" aei_tier2_habitat nearest
+## curl -sSL -o "$OUT/aei_tier2_habitat.vat.dbf" "${AEI}%2F<TIER 2 folder>%2F<file>.tif.vat.dbf"
+## cog "/vsicurl/${AEI}%2F<TIER 3 folder>%2F<file>.tif" aei_tier3_ecosystem nearest
 
 ls -l "$OUT"
