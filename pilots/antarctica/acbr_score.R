@@ -29,7 +29,15 @@ stopifnot(!is.na(fld))
 cat(nrow(v), "polygons; field", fld, ":", paste(sort(unique(v[[fld, drop = TRUE]])), collapse = " "), "\n")
 v <- terra::project(v, "EPSG:4326")
 g <- s2::as_s2_geography(terra::geom(v, wkt = TRUE), check = FALSE)
-g <- s2::s2_make_valid(g)
+## rebuilding can return the complement of a polygon (ASPA 153 came back as
+## the whole globe less the ASPA); flip any that cover more than a hemisphere
+flip_big <- function(g) {
+  big <- which(s2::s2_area(g) > 2 * pi * 6371010^2)
+  for (i in big) g[i] <- s2::s2_difference(s2::as_s2_geography(TRUE), g[i])
+  if (length(big)) cat("flipped", length(big), "inverted polygon(s)\n")
+  g
+}
+g <- flip_big(s2::s2_rebuild(g))
 lab <- as.character(v[[fld, drop = TRUE]])
 
 c13 <- readRDS(file.path(dir, "icefree_exposure_L13.rds"))
