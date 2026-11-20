@@ -9,7 +9,8 @@
 ## (with acbr from acbr_score.R).
 ##
 ## 1. Ice-free area per ACBR: inventory (Tier 1 area) against rock outcrop
-##    v7.3, and the cells each has that the other lacks. Inventory cells take
+##    v7.3 and the official ACBR v2 areas (regions/acbr_v2_areas.csv), and
+##    the cells each has that the other lacks. Inventory cells take
 ##    the ACBR of their level 9 parent where that parent holds outcrop.
 ## 2. Habitat make-up (Tier 2): share of inventory area in each habitat over
 ##    all ice-free cells and over the land holdout candidates (scored within
@@ -58,6 +59,11 @@ cmp <- do.call(rbind, lapply(c(sort(unique(cells$acbr)), "all"), function(r) {
              cells_rock_only = sum(x$aei_km2 == 0 & x$rock_km2 > 0),
              rock_only_km2 = round(sum(x$rock_km2[x$aei_km2 == 0])))
 }))
+## official ACBR v2 areas (ATCM Resolution 3 (2017) Annex, Table 1)
+oa <- utils::read.csv(file.path("regions", "acbr_v2_areas.csv"), stringsAsFactors = FALSE)
+cmp$official_km2 <- oa$official_km2[match(cmp$acbr, oa$acbr)]
+cmp$official_km2[cmp$acbr == "all"] <- sum(oa$official_km2)
+cmp$rock_vs_official <- round(cmp$rock_v73_km2 / cmp$official_km2, 2)
 print(cmp, row.names = FALSE)
 utils::write.csv(cmp, file.path(outdir, "aei_vs_rock_by_acbr.csv"), row.names = FALSE)
 
