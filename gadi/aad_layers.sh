@@ -59,9 +59,8 @@ convert "/vsicurl/${FOLDER}%2FASMA_points_Aug2011.shp" asma_points_2011 || true
 ##    cb8c6d56-8a78-4032-a455-cb58cb4bb6de, prefix AADC_4568_2024/. Rasters
 ##    are 100 m GeoTIFFs; they are rewritten as COGs (nearest-neighbour
 ##    overviews for the class rasters, average for continuous ones). The
-##    Tier 1 URLs are confirmed (Michael, 2026-11-20); the others follow the
-##    folder and file names in the AADC record description and may need
-##    correcting (a wrong name fails with NoSuchKey and the script goes on).
+##    URLs below were all confirmed by Michael (2026-11-20). A missing object
+##    prints "cannot open" and the script goes on.
 AEI=$EDS/cb8c6d56-8a78-4032-a455-cb58cb4bb6de/object/download?prefix=AADC_4568_2024
 T1="TIER%201%20Major%20Environmental%20Units"
 cog () {  # cog <url> <name> <resampling>
@@ -71,18 +70,20 @@ cog () {  # cog <url> <name> <resampling>
     "$src" "$OUT/$name.tif"
   ls -l "$OUT/$name.tif"
 }
-## the class table travels beside the COG as <name>.vat.dbf
-cog "/vsicurl/${AEI}%2F${T1}%2FTier1_MEUs.tif" aei_tier1_meu nearest || true
-curl -sSL -o "$OUT/aei_tier1_meu.vat.dbf" "${AEI}%2F${T1}%2FTier1_MEUs.tif.vat.dbf" || true
-cog "/vsicurl/${AEI}%2F${T1}%2FConf1.tif" aei_tier1_confidence average || true
-## abiotic variables (2014-15 climate fields at 100 m)
-for v in MeanTemp_1415_bm Total_DD_1415_minus5_bm elevation_bm; do
-  cog "/vsicurl/${AEI}%2F${T1}%2FAbiotic%20Variables%2F${v}.tif" "aei_${v}" average || true
+T2="TIER%202%20Habitat%20Complexes"
+T3="TIER%203%20Bioregional%20ecosystem%20types"
+AB="${T1}%2FAbiotic%20predictors"
+## class rasters, each with its value attribute table as <name>.vat.dbf
+cls () {  # cls <folder> <file stem> <name>
+  cog "/vsicurl/${AEI}%2F$1%2F$2.tif" "$3" nearest || return 0
+  curl -sSL -o "$OUT/$3.tif.vat.dbf" "${AEI}%2F$1%2F$2.tif.vat.dbf" || true
+}
+cls "$T1" Tier1_MEUs aei_tier1_meu
+cls "$T2" Tier2_HCs aei_tier2_habitat
+cls "$T3" Tier3_BETs_int aei_tier3_ecosystem
+## continuous: 2014-15 mean temperature and degree days above -5 deg C (100 m)
+for v in MeanTemp_1415_bm Total_DD_1415_minus5_bm; do
+  cog "/vsicurl/${AEI}%2F${AB}%2F${v}.tif" "aei_${v}" average || true
 done
-## Tier 2 (31 habitat complexes) and Tier 3 (309 regional ecosystems): fill
-## in the folder and file names from the record (or the EDS listing), e.g.
-## cog "/vsicurl/${AEI}%2F<TIER 2 folder>%2F<file>.tif" aei_tier2_habitat nearest
-## curl -sSL -o "$OUT/aei_tier2_habitat.vat.dbf" "${AEI}%2F<TIER 2 folder>%2F<file>.tif.vat.dbf"
-## cog "/vsicurl/${AEI}%2F<TIER 3 folder>%2F<file>.tif" aei_tier3_ecosystem nearest
 
 ls -l "$OUT"
