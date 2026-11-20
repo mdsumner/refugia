@@ -11,6 +11,7 @@
 ##                                  ss (area-weighted sum of squares)
 ##                                  (MeanTemp_1415_bm, Total_DD_1415_minus5_bm)
 ##   aei_<tier>_classes.csv         the class table read from the .vat.dbf
+## The continuous sums keep only cells holding Tier 1 (ice-free) pixels.
 ## All are mergeable sums: any union of cells adds exactly; mean = s / w.
 ##
 ## Each pixel goes to the cell holding its centre. Pixel area is the true
@@ -82,6 +83,12 @@ for (nm in names(layers)) {
   if (file.exists(of)) { cat("have", of, "\n"); next }
   t0 <- Sys.time()
   d <- sum_raster(f, layers[[nm]])
+  ## the abiotic rasters cover ice and ocean too; keep the ice-free cells (Tier 1)
+  t1f <- file.path(outdir, sprintf("aei_tier1_meu_L%d.csv.gz", level))
+  if (layers[[nm]] == "cont" && file.exists(t1f)) {
+    keep <- unique(utils::read.csv(t1f)$cell)
+    d <- d[d$cell %in% keep, ]
+  }
   utils::write.csv(d, gzfile(of), row.names = FALSE)
   tot <- if (layers[[nm]] == "class") sum(d$area_km2) else sum(d$w)
   cat(sprintf("%s: %d rows, %d cells, %.0f km2, %.1f min\n", nm, nrow(d), length(unique(d$cell)), tot,
