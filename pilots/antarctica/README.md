@@ -299,3 +299,22 @@ its rock. Same holdout rule, ACBR as the reference region.
 - The shared tables (`pilots/export_cells.R`) use the ACBR scoring for
   Antarctic land when `land_refugium_acbr` is present.
 
+
+## Antarctic Ecosystem Inventory per cell (Toth et al. 2024)
+
+`gadi/aei.pbs` (on Gadi) sums the 100 m inventory rasters into level 13
+cells; `Rscript pilots/antarctica/aei_summary.R <aei_L13> <era5_out> <outdir>`
+compares the ice-free footprint with rock outcrop v7.3 and gives the Tier 2
+habitat make-up of the land holdout candidates. First run, 2026-11-20
+(class tables and the 2014-15 temperature sums not yet back from Gadi):
+
+- Inventory ice-free area (Tier 1) is 89,050 km2 in 153,924 cells, against
+  72,201 km2 in 143,464 cells for rock outcrop v7.3 (ratio 1.23, 1.14 to
+  1.50 by ACBR; South Orkney Islands is missing from the inventory, 8
+  against 105 km2). 139,730 cells hold both; cells in only one layer carry
+  little area (1,825 km2 inventory-only, 551 km2 rock-only).
+- Tier 2 (34 habitat codes present): candidates hold the same habitat mix
+  as ice-free land overall to within a factor of about 1.5 for the large
+  habitats, with one strong exception, habitat 31 (3.7% of ice-free area,
+  0.6% of candidate area). Habitat names wait for the class tables.
+- Habitats per cell: 2.15 in candidate cells, 2.07 elsewhere.
