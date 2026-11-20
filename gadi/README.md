@@ -37,7 +37,7 @@ sessions (about 8 minutes for 46 years), since Acacia is reachable there.
 
     singularity exec $SIF bash gadi/aad_layers.sh /g/data/jk72/$USER/refugia/aad
 
-Reads the shapefiles over HTTP (`/vsicurl/` on the EDS
+Reads the shapefiles over HTTP (`/vsicurl/` on single objects at the EDS
 `object/download?prefix=` URLs) and writes `<name>.parquet` and
 `<name>.gpkg` per layer. The Terauds et al. 2012 dataset holds ACBR v1 (15
 regions, 24,464 polygons); prefer ACBR v2 (Terauds and Lee 2016) once its

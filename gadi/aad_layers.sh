@@ -40,19 +40,15 @@ convert () {  # convert <src> <name>
 ## 1. ACBR v1 (Terauds et al. 2012): ice-free polygons labelled by region
 convert "/vsicurl/${T12}${P12}%2FACBRs%2FACBRs%20for%20export.shp" acbr_v1_terauds2012
 
-## 2. ASPA / ASMA (October 2011 snapshot in the same dataset). Michael's
-##    path points at the ASMA points; the ASPA polygons are probably beside
-##    them in ERA_ASPA_ASMA_Oct2011. The EDS API has no directory listing we
-##    know of, so first try downloading the folder (the prefix form may return
-##    a zip of everything under it) and list it:
+## 2. ASPA / ASMA (October 2011 snapshot in the same dataset). Only single
+##    objects can be fetched: a folder prefix returns NoSuchKey (checked
+##    2026-11-20), so file names inside ERA_ASPA_ASMA_Oct2011 must come from
+##    the AADC metadata page. The objects sit in the AADC S3 store under
+##    aadc-datasets/ASAC_3095_Antarctic_Biogeography_shapefiles/. Confirmed:
 FOLDER="${T12}${P12}%2FASPAs%2FERA_ASPA_ASMA_Oct2011"
-curl -sSL -o "$OUT/aspa_folder.download" "$FOLDER" || true
-file "$OUT/aspa_folder.download" || true
-unzip -l "$OUT/aspa_folder.download" 2>/dev/null || head -c 600 "$OUT/aspa_folder.download"
-echo
-##    then, with the real file name from that listing (example name only):
-##    convert "/vsicurl/${FOLDER}%2FASPA_polygons_Oct2011.shp" aspa_polygons_2011
 convert "/vsicurl/${FOLDER}%2FASMA_points_Aug2011.shp" asma_points_2011 || true
+##    ASPA polygons: add the file name when known, for example
+##    convert "/vsicurl/${FOLDER}%2F<ASPA polygons>.shp" aspa_polygons_2011
 
 ## 3. ACBR v2 (Terauds and Lee 2016) and the ice-free layer (Toth and Terauds
 ##    2023, https://doi.org/10.26179/7mnh-j215): fill in the EDS dataset id

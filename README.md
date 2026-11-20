@@ -97,7 +97,8 @@ map: `refugia_candidates_map.png` from `pilots/australia/candidate_map.R`.
 - [x] ocean: summer (Jan-Mar) open-water SST trend, signal-to-noise and velocity south of 60S at level 9 from OISST v2.1 pixels (trend.sst sums are level 5 only); gate passes; see `pilots/antarctica/README.md`
 - [x] land: ice-free fraction per level 13 cell from the rock outcrop v7.3 polygons (exact spherical intersection, no raster)
 - [x] land: exposure from ERA5 summer 2 m temperature (DJF 1980-2026, NSF NCAR copy on AWS) at level 9, scored within sectors; level 13 ice-free cells take their parent's values
-- [ ] land: score against ACBRs (polygons to add)
+- [x] land: scored within ACBR v2 (Terauds 2016, 16 regions); `pilots/antarctica/acbr_score.R`
+- [x] check: candidate overlap with ASPAs (2024 layer), `checks/aspa_overlap.R`
 - [ ] land: compare with the AADC ice-free layer (Toth and Terauds 2023) and the controlledburn burn
 - [ ] confirm best current ice-free source with colleagues (see `notes/data_sources.md`)
 
@@ -115,7 +116,7 @@ region; snr is that of the main exposure variable:
 | Australia land | thermal (Tmax) | 10 | 1,521 | 140 | +0.18 deg C | 0.45 |
 | Antarctic sea ice | holdout (ice days) | 9 | 47,839 | 7,584 | -1.4 days | 0.05 |
 | Southern Ocean | holdout (summer SST) | 9 | 44,862 | 11,004 | +0.015 deg C | 0.02 |
-| Antarctic ice-free land | holdout (summer 2 m T) | 9 | 3,357 | 828 | +0.06 deg C | 0.15 |
+| Antarctic ice-free land | holdout (summer 2 m T, within ACBR v2) | 9 | 3,346 | 803 | +0.06 deg C | 0.15 |
 
 The Australian warming signal has emerged from interannual noise in about
 half the cells; in the Antarctic domains it has in 2 to 15%, so there the
@@ -123,5 +124,5 @@ candidates are rankings within the noise rather than detected holdouts.
 
 ### Checks
 
-- [ ] candidate overlap with CAPAD, ASPAs, CCAMLR MPAs
+- [ ] candidate overlap with CAPAD and CCAMLR MPAs (ASPAs done, see `checks/README.md`)
 - [ ] agreement with published refugia studies (references to verify)
