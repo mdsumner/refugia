@@ -294,8 +294,20 @@ its rock. Same holdout rule, ACBR as the reference region.
   Transantarctic Mountains (little trend).
 - North Victoria Land (+0.52, 84% of cells with abs(snr) >= 2) and
   Dronning Maud Land (+0.32, 30%) are the only regions where summer
-  warming stands clear of the noise in ERA5; both need a station check.
-  Elsewhere the median trend is within 0.1 deg C per decade of zero.
+  warming stands clear of the noise in ERA5. Elsewhere the median trend is
+  within 0.1 deg C per decade of zero.
+- Station check (`checks/era5_station_check.R`, GHCN-daily): the Dronning
+  Maud Land warming is not in the station records. Neumayer (43 summers)
+  and Novolazarevskaya (39) show +0.02 and -0.17 deg C per decade where
+  ERA5 shows +0.56 and +0.47 over the same summers, and the ERA5 minus
+  station difference steps up by 1.4 and 1.9 deg C after 2000. The North
+  Victoria Land stations are short (12 to 21 summers) and mixed: they warm
+  (median +0.34) but less than ERA5 (+0.61). Elsewhere (Syowa to Dumont
+  d'Urville, the Peninsula) ERA5 and station trends agree within 0.15 deg C
+  per decade with correlations of 0.7 to 0.94. See `checks/README.md`.
+  Scores within an ACBR rank cells against each other, so a step shared by
+  the whole region moves its trends but less its ranking; the trend values
+  and snr in Dronning Maud Land should not be quoted as warming.
 - The shared tables (`pilots/export_cells.R`) use the ACBR scoring for
   Antarctic land when `land_refugium_acbr` is present.
 
@@ -313,6 +325,11 @@ habitat make-up of the land holdout candidates. First run, 2026-11-20
   1.50 by ACBR; South Orkney Islands is missing from the inventory, 8
   against 105 km2). 139,730 cells hold both; cells in only one layer carry
   little area (1,825 km2 inventory-only, 551 km2 rock-only).
+- Rock outcrop area per ACBR from our cells matches the official ACBR v2
+  areas (ATCM Resolution 3 (2017) Annex, `regions/acbr_v2_areas.csv`)
+  within 5% for 15 of 16 regions (71,538 km2 official, 72,201 ours); the
+  exception is the South Orkney Islands (105 against 160 km2), at the
+  northern edge of the grid.
 - Tier 2 (34 habitat codes present): candidates hold the same habitat mix
   as ice-free land overall to within a factor of about 1.5 for the large
   habitats, with one strong exception, habitat 31 (3.7% of ice-free area,

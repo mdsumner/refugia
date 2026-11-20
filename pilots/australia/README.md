@@ -60,7 +60,7 @@ tiles (21 with Wilsons Promontory, FUR01) and MAC needs 12.
 - [x] pixel-to-cell mapping for the DEA 30 m tile grid (one per tile, reused for every year and product): `build_tile_mapping()`, gated by `sources/wofs_gate.R`
 - [x] per-cell, per-year WOfS wet/clear sums and FC green (pv_pc_10, pv_pc_50) sums
 - [x] persistence overall and in dry years
-- [ ] gate against a direct WOfS summary of one subregion
+- [x] gate against a direct WOfS summary of one subregion (`sources/wofs_subregion_gate.R`, KIN01)
 - [x] AGCD exposure at level 10
 - [x] artificial-water mask, stricter water flag, joined candidates and map
 
@@ -301,6 +301,19 @@ west of the ponds (possibly effluent-fed wetland; not verified), and the
 cluster at 131.98E, 23.78S (still unidentified). A short hand-checked
 exclusion list may be needed for these.
 
+Hand-checked boxes now live in `regions/water_exclusions.csv`, applied by
+`sources/water_mask.R` after the Overture mask (2026-11-20):
+
+- Ilparpa claypans (133.79-133.8175E, 23.75-23.78S), `exclude`: next to
+  Ilparpa Swamp, which takes treated effluent from the sewage ponds.
+  Checked against Overture places and water, not imagery. Five MAC cells
+  move from water to water_artificial (MAC water 257 to 252).
+- West MacDonnell 131.98E (131.975-132.003E, 23.775-23.808S), `review`: no
+  mapped water feature, 5 km south of the Katjutari outstation (airstrip,
+  water tower). Could be a dam, bore outflow or a natural waterhole, so it
+  stays natural; its three water cells carry `water_review` in
+  refugia_candidates_L13 until someone looks at imagery.
+
 Tasmania: 668,113 persistent pixels are artificial, mostly the hydro storages
 (Great Lake, Lake Gordon, Lake Pedder and others mapped as reservoirs), which
 include natural lakes raised by dams. Persistent natural water remains in
@@ -312,3 +325,25 @@ earlier ones each rested on one or two wet-50 pixels.
 Map: `pilots/australia/candidate_map.R` writes
 `refugia_candidates_map.png`, one row per pilot, one panel per kind plus a
 panel for cells with two or more kinds.
+
+
+## Subregion gate (WOfS 1987-2025, KIN01)
+
+`Rscript sources/wofs_subregion_gate.R data/wofs_persistence_L13.rds KIN01`
+reads the DEA annual WOfS rasters for all 39 years over every tile that
+reaches King (KIN01, 4,198 level 13 cells) and sums them two ways.
+
+| path | wet | clear | wet fraction |
+|---|---|---|---|
+| cell sums (pipeline) | 42,969,208 | 1,686,009,275 | 0.0255 |
+| direct, pixels whose centre is in those cells (cell from s2, not the mapping) | 42,969,208 | 1,686,009,275 | 0.0255 |
+| direct, pixels whose centre is in the KIN01 polygon | 16,204,190 | 1,683,173,690 | 0.0096 |
+
+- The pipeline matches the direct summary exactly (gate passes).
+- Against the polygon, clear observations agree to 0.2%, but the cells hold
+  2.65 times the wet observations: cells on the coast reach past the IBRA
+  shoreline and take in sea, which WOfS counts as wet. So the cell wet
+  fraction (`wf_all`, `wf_dry`) of coastal cells includes sea. The water
+  flags are not affected: they count pixels under the IBRA land mask
+  (`px_wet90`, `px_wet50`). Any per-region wet fraction quoted from the
+  cell sums should use land pixels only.

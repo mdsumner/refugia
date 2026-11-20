@@ -33,3 +33,60 @@ Candidates are the land holdouts scored within ACBR v2 (`pilots/antarctica/acbr_
   cells; none of the sea ice holdouts and 2 SST holdouts.
 - One ASPA polygon (153) is rebuilt by s2 as its complement; the script
   flips polygons larger than a hemisphere.
+
+
+## ERA5 summer warming against Antarctic stations
+
+`Rscript checks/era5_station_check.R <ghcn_dir> <era5_out_dir> <outdir>`
+
+GHCN-daily per-station files come from
+`https://noaa-ghcn-pds.s3.amazonaws.com/csv/by_station/<ID>.csv` (reachable
+from the cloud sessions). Summer (DJF) mean of TAVG, or (TMAX + TMIN) / 2,
+with all three months holding at least 20 days; compared over the station's
+own summers (at least 12) with the ERA5 level 9 cell holding it.
+`step_2000` is the change in the mean ERA5 minus station difference between
+summers to 2000 and from 2001.
+
+| region | station | summers | r | station trend | ERA5 trend, same summers | step_2000 |
+|---|---|---|---|---|---|---|
+| North Victoria Land | Mario Zucchelli | 12 (2009-2026) | 0.86 | +0.22 | +0.78 | |
+| North Victoria Land | Cape Phillips AWS | 21 (2002-2026) | 0.34 | -0.62 | +0.44 | |
+| North Victoria Land | Priestley Glacier AWS | 19 (2007-2026) | 0.88 | +0.63 | +1.02 | |
+| North Victoria Land | Cape Ross AWS | 21 (2002-2026) | 0.60 | +0.45 | +0.26 | |
+| South Victoria Land | McMurdo | 24 (1980-2026) | 0.39 | +0.31 | -0.05 | -0.92 |
+| Dronning Maud Land | Novolazarevskaya | 39 (1980-2026) | 0.40 | -0.17 | +0.47 | +1.89 |
+| Dronning Maud Land | Neumayer | 43 (1983-2026) | 0.68 | +0.02 | +0.56 | +1.38 |
+| Dronning Maud Land | Troll | 17 (1995-2025) | 0.66 | -0.62 | +0.11 | |
+| Dronning Maud Land | SANAE IV | 16 (1999-2023) | 0.65 | -0.21 | +0.37 | |
+| Dronning Maud Land | Kohnen | 13 (2008-2022) | 0.97 | +0.35 | +0.50 | |
+| Enderby Land | Syowa | 39 (1985-2026) | 0.88 | -0.11 | -0.10 | -0.03 |
+| East Antarctica | Mawson | 47 | 0.85 | -0.06 | +0.02 | +0.17 |
+| East Antarctica | Davis | 47 | 0.71 | -0.02 | -0.04 | -0.08 |
+| East Antarctica | Mirny | 40 | 0.94 | -0.02 | 0.00 | -0.13 |
+| East Antarctica | Casey | 47 | 0.92 | -0.14 | -0.04 | +0.24 |
+| Adelie Land | Dumont d'Urville | 32 (1993-2024) | 0.45 | +0.51 | -0.16 | -0.75 |
+| Peninsula | Esperanza | 44 | 0.81 | +0.16 | -0.06 | -0.57 |
+| Peninsula | Bellingshausen | 37 | 0.92 | -0.02 | +0.01 | +0.12 |
+| Peninsula | Rothera | 22 (2001-2025) | 0.91 | -0.10 | -0.06 | |
+| Peninsula | Vernadsky | 23 (1986-2026) | 0.81 | -0.01 | +0.07 | +0.25 |
+
+Trends in deg C per decade. Leningradskaya, Maitri, SANAE (old) and Wasa have
+fewer than 12 complete summers.
+
+- From East Antarctica round to the Peninsula ERA5 follows the stations
+  closely (r 0.7 to 0.94, trends within 0.15 deg C per decade).
+- Dronning Maud Land: the ERA5 warming (+0.32 deg C per decade over the
+  region's ice-free cells, 1980-2026) is not in the stations. At the two
+  long records ERA5 warms by about 0.5 deg C per decade more than the
+  station, as a step of 1.4 to 1.9 deg C after 2000 in the ERA5 minus
+  station difference, which points to an inhomogeneity in ERA5 there
+  rather than a regional change. The shorter records (Troll, SANAE IV)
+  agree with that.
+- North Victoria Land: the records are short and only start after 2000, so
+  the 1980-2026 ERA5 trend cannot be tested. Three of four stations warm,
+  but ERA5 runs warmer than the stations by a median 0.5 deg C per decade
+  over the same summers. Treat the North Victoria Land warming as likely
+  real but overstated.
+- Priestley Glacier and Kohnen are inland AWS on ice (summer means of -23
+  and -27 deg C); the large mean bias at Priestley (+11 deg C) reflects
+  the 0.25 deg ERA5 pixel and elevation, not an error in the trend test.
