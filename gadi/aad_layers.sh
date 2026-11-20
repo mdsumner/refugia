@@ -6,7 +6,11 @@
 ## Gadi (login node or copyq). Run inside the GDAL container (GDAL >= 3.11
 ## for the `gdal vector` CLI), for example
 ##
-##   singularity exec $SIF bash gadi/aad_layers.sh /g/data/jk72/$USER/refugia/aad
+##   module load singularity
+##   SIF=${SIF:-/g/data/jk72/$USER/sif_lib/gdal-r-python-extras_latest.sif}
+##   singularity exec -B /g/data "$SIF" bash gadi/aad_layers.sh /g/data/jk72/$USER/refugia/aad
+##
+## (the same image and default as gadi/agcd_sums.pbs and gadi/ice_sums.pbs)
 ##
 ## then bring the output folder back (rsync to Nectar, Acacia, or upload the
 ## files to the project). Files are read directly over HTTP with /vsicurl/;
