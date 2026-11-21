@@ -105,6 +105,7 @@ map: `refugia_candidates_map.png` from `pilots/australia/candidate_map.R`.
 ### Shared outputs (both domains)
 
 - [x] one long cell schema for every pilot (`R/schema.R`, `pilots/export_cells.R`): `cells_metrics` (domain, source, period, level, cell, lon, lat, region_set, region, variable, metric, value, units) and `cells_flags` (candidate kind per cell), as parquet (`sources/cells_parquet.py`); the candidate rule per domain in `rules.csv`; `bridge_summary.csv` gives cells, candidates and the share of cells with abs(snr) >= 2 per domain
+- [x] figures: `pilots/bridge_map.R` (one exhibit, both domains) and `pilots/results_figures.R` (one framed figure each: Australian thermal holdouts with IBRA regions, Antarctic land trend and holdouts with ACBR labels, the rule in both domains, ERA5 against six stations)
 - [x] candidate layers as COGs (`pilots/export_cogs.R`): Tasmania and MacDonnell at 250 m in EPSG:3577, Antarctica at 5 km in EPSG:3031 (flags and trends)
 
 Same rule, different variable (`bridge_summary.csv`, 2026-11-20). Exposure
