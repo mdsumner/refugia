@@ -6,3 +6,6 @@
 ^sources$
 ^regions$
 ^data$
+^site$
+^_site$
+^\.github$
