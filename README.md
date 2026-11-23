@@ -11,6 +11,8 @@ only the variable and the spatial grain change. This repo therefore uses one
 scoring scheme on a shared S2 cell grid, fed by domain-specific inputs, and
 always reports a cell against a reference region.
 
+Pilot results: <https://mdsumner.github.io/refugia/> (built from [`site/`](site/)).
+
 Framework notes: [`notes/framework.md`](notes/framework.md).
 First data sources: [`notes/data_sources.md`](notes/data_sources.md).
 

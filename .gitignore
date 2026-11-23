@@ -6,3 +6,4 @@ data/
 *.parquet
 *.zarr/
 __pycache__/
+_site/
