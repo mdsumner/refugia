@@ -14,6 +14,21 @@ marked "checked" have been read from a source page.
 | BoM AGCD, 0.05 deg daily | Tmax, Tmin, precipitation | trend, signal-to-noise, velocity | NCI; raad.virtualize candidate |
 | DEM (SRTM-derived DEM-H, or DEA coastal DEMs) | elevation, aspect, relief | microrefugia proxies | GA / NCI |
 
+## Australia, fire weather
+
+See `fire_weather.md`. BARRA-C2 on S3 checked 2026-11-26 (`sources/barra2_probe.py`); the rest is
+from the epicormic research notes (2026-11-26), to check when used.
+
+| source | variable | feeds | access |
+|---|---|---|---|
+| BoM BARRA-C2 reanalysis, 0.04 deg, 1979 on (checked) | daily `tasmax`, `sfcWindmax`, `pr`; hourly `hurs` | daily FFDI inputs | `s3://bom-opendata-climate/BARRA2/output/reanalysis/AUST-04/BOM/ERA5/historical/hres/BARRA-C2/v1/`, public, monthly netCDF, CC BY 4.0; NCI `ob53` |
+| BoM BARRA-R2, 0.11 deg, 1979 on | as above | cross-check | same bucket, `AUS-11`; NCI `ob53` |
+| BoM AGCD v1-0-4, 0.05 deg daily | precip (and Tmax) | KBDI and drought factor (choice A) | NCI `zv2` (as the AGCD exposure pilot) |
+| CORDEX-CMIP6 bias-adjusted `AUST-05i` (ACS) | daily `tasmax`, `pr`, `hursmin`, `sfcWindmax`, 1960-2099 | projected FFDI, time of emergence | NCI `kj66` (BoM, CSIRO, UQ-DEC) and `ia39` (NARCliM2.0, newer) |
+| NCRA bushfire layers | days above FFDI 50 and 75 at global warming levels | comparison | NCI `/g/data/ia39/ncra/bushfire/`; code `AusClimateService/hazard_fire` |
+| Copernicus CEMS `cems-fire-historical-v1`, 0.25 deg, 1940 on | KBDI, drought factor, Canadian FWI | check | Copernicus EWDS, CC BY |
+| Harris and Lucas station FFDI, 39 stations, 1973-2017 | seasonal FFDI | check | Mendeley Data `xf5bv3hcvw`, CC BY 4.0 |
+
 ## Australia, coast and sea
 
 | source | variable | feeds | access |

@@ -50,6 +50,7 @@ refugium each candidate is.
 |---|---|---|
 | Australian land, DEA inputs | 13 | ~1 km |
 | Australian land, AGCD climate (0.05 deg) | 10 | ~8 km |
+| Australian land, fire weather (BARRA-C2 regridded to the AGCD grid) | 10 | ~8 km |
 | Antarctic sea ice (NSIDC 25 km) | 9 | ~16 km |
 | Antarctic ice-free land | 13 or finer | ~1 km |
 | cross-check with trend.* | 5 | ~290 km |
@@ -90,6 +91,22 @@ map: `refugia_candidates_map.png` from `pilots/australia/candidate_map.R`.
 - [ ] gate: one IBRA subregion's cell-sum wet fraction equals a direct WOfS summary
 - [ ] hand-checked exclusions for unmapped artificial water near Alice Springs
 - [ ] Tasmanian replacement for the green flag (dry years are greener there)
+
+### Fire weather (Tasmania first)
+
+Design, inputs and the access probe: [`notes/fire_weather.md`](notes/fire_weather.md).
+Daily McArthur FFDI from xclim (as the Australian Climate Service), per cell and fire year
+(July to June); first consumer is epicormic (Tasmanian fires, Fern Tree).
+
+- [x] decide the domain, index, grid, sums and metrics (2026-11-26)
+- [x] probe BARRA-C2 on public S3: layout, chunking, packing, Tasmania read times (`sources/barra2_probe.py`)
+- [ ] choose rain for KBDI (AGCD or BARRA-C2) and where to run (Gadi `ob53` membership, or S3)
+- [ ] daily FFDI per pixel (BARRA-C2 Tmax, max wind, min RH from hourly; regridded to AGCD r005), fire years 1980-2025
+- [ ] per-cell, per-fire-year sums at level 10: ndays, sum, sumsq, spring sum, days >= 12, 25, 50, mild days
+- [ ] gate: cell-sum cumulative FFDI equals a direct per-pixel computation
+- [ ] checks: KBDI and drought factor against CEMS `cems-fire-historical-v1`; seasonal FFDI against Harris and Lucas stations; BARRA-R2 against BARRA-C2
+- [ ] trend, signal-to-noise, velocity and persistence (overall and in the five worst fire years), scored within IBRA; candidates into the shared schema
+- [ ] projections: `kj66` AUST-05i BARPA-R and CCAM, SSP1-2.6 and SSP3-7.0, same code; `toe` added to the metric vocabulary
 
 ### Antarctica
 
