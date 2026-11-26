@@ -20,6 +20,33 @@ The container image and project defaults follow imos-sor/nci (`jk72`, `gdal-r-py
       -v AGCD_DIR=/g/data/zv2/agcd/v1-0-4,VARS=tmax+tmin+precip \
       gadi/agcd_sums.pbs
 
+## Fire weather (FFDI)
+
+Daily McArthur FFDI for the Tasmania pilot and its level 10 cell sums, fire
+years 1980-2025 (July to June; design in `notes/fire_weather.md`). Needs
+`gv90`, `jk72`, `zv2` (AGCD), `ob53` (BARRA2) and, for the default python,
+`xp65` (NCI's shared `conda/analysis3`). First, on a login node:
+
+    bash gadi/ffdi_probe.sh
+
+It lists your memberships, the BARRA-C2 and AGCD files the job will read, and
+which python imports xclim. Then a one-year test, then the lot:
+
+    qsub -P gv90 -l storage=gdata/zv2+gdata/ob53+gdata/jk72+gdata/xp65 \
+      -l walltime=01:00:00 -v FIRST=2025,LAST=2025 gadi/ffdi.pbs
+    qsub -P gv90 -l storage=gdata/zv2+gdata/ob53+gdata/jk72+gdata/xp65 gadi/ffdi.pbs
+
+(`-v PYENV=sif` uses the container's python instead, if the probe shows it has
+xclim.) The test also writes `kbdi_df_1970_2025.nc` (KBDI and drought factor
+for 1970-2025, about 450 MB), which the full run reuses because SPINUP and
+LAST are the same. Check the test's "Memory Used" in the job log: it includes
+the full KBDI, so it is the peak for the full run (default 16 GB; rerun with
+`-l mem=32GB` if it was killed). Output:
+`/g/data/jk72/$USER/refugia/ffdi/daily/` (about 23 MB a fire year, 1 GB in
+all; keep on Gadi) and `.../ffdi/L10/ffdi_tasmania_fy<YYYY>_L10.rds` (small; bring back).
+Both stages skip finished fire years, so rerun the same `qsub` after a
+walltime stop.
+
 ## Sea ice (trend.ice)
 
     qsub -P gv90 -l storage=gdata/jk72 gadi/ice_sums.pbs

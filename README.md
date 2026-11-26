@@ -100,8 +100,9 @@ Daily McArthur FFDI from xclim (as the Australian Climate Service), per cell and
 
 - [x] decide the domain, index, grid, sums and metrics (2026-11-26)
 - [x] probe BARRA-C2 on public S3: layout, chunking, packing, Tasmania read times (`sources/barra2_probe.py`)
-- [ ] choose rain for KBDI (AGCD or BARRA-C2) and where to run (Gadi `ob53` membership, or S3)
-- [ ] daily FFDI per pixel (BARRA-C2 Tmax, max wind, min RH from hourly; regridded to AGCD r005), fire years 1980-2025
+- [x] rain for KBDI: AGCD v1-0-4 (precip and Tmax, spin-up from 1970); run on Gadi
+- [x] scripts: `gadi/ffdi_probe.sh`, `gadi/ffdi_daily.py`, `gadi/ffdi_sums.R`, `gadi/ffdi.pbs`; one fire year (2025) tested end to end from public copies (see `notes/fire_weather.md`)
+- [ ] daily FFDI per pixel (BARRA-C2 Tmax, max wind, min RH from hourly; bilinear to AGCD r005), fire years 1980-2025, on Gadi
 - [ ] per-cell, per-fire-year sums at level 10: ndays, sum, sumsq, spring sum, days >= 12, 25, 50, mild days
 - [ ] gate: cell-sum cumulative FFDI equals a direct per-pixel computation
 - [ ] checks: KBDI and drought factor against CEMS `cems-fire-historical-v1`; seasonal FFDI against Harris and Lucas stations; BARRA-R2 against BARRA-C2

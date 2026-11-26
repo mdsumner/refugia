@@ -44,10 +44,11 @@ spin-up):
 | daily Tmax | BARRA-C2 `day/tasmax` | K, packed (scale and offset in the file) |
 | daily max 10 m wind | BARRA-C2 `day/sfcWindmax` | m/s, to km/h for FFDI |
 | daily min RH | BARRA-C2 `1hr/hurs`, minimum per local day | no `day/hursmin` is published; the hourly read dominates the cost |
-| daily rain (KBDI and DF) | AGCD v1-0-4 `precip` (choice A) or BARRA-C2 `day/pr` (choice B) | open: A is observed and allows spin-up before 1979; B is self-consistent |
+| daily rain and Tmax for KBDI and DF | AGCD v1-0-4 `precip` and `tmax` | decided 2026-11-26: observed, and KBDI spins up from 1970, before BARRA2 starts |
 
 Grid: BARRA-C2 is 0.04 deg; regrid to the AGCD 0.05 deg r005 grid (bilinear
-for Tmax, RH and wind; conservative for rain). The bias-adjusted projections
+for Tmax, RH and wind; rain is AGCD's own). Land is BARRA-C2 `fx/sftlf` >= 50%
+after interpolation: AGCD has values over the sea, so it cannot be the mask. The bias-adjusted projections
 (`AUST-05i`) are on that grid too, so observed and projected FFDI share the
 level 10 mapping already built for AGCD (`gadi/agcd_sums.R`).
 
@@ -140,10 +141,33 @@ Road).
   rain mean 1.1e-05 kg m-2 s-1, times 86400 = 0.96 mm/day (about 30 mm for
   the month, wettest day 9.8 mm); hourly RH 30.1 to 99.6%.
 
+## One-year test (2026-11-26)
+
+`gadi/ffdi_daily.py` and `gadi/ffdi_sums.R`, unchanged, on Tasmania-sized
+copies laid out as on Gadi: AGCD 2022-2025 from NCI THREDDS (OPeNDAP) and
+BARRA-C2 July 2024 to June 2025 from S3, KBDI spun up from 2022, xclim
+1.0.1 (imports from `xclim.compute.fire`; older xclim from `xclim.indices`).
+
+- 2,965 land pixels of 10,545 in the box; 1,082,225 pixel-days.
+- FFDI recomputed by hand from Noble et al. (1980) with the drought factor,
+  Tmax, minimum RH and wind in km/h matches xclim to 0.0000.
+- Input ranges: Tmax -1.3 to 37.9 C, minimum RH 13 to 100%, max wind 4.6
+  to 118 km/h, drought factor 0 to 10, rain 0 to 193 mm/day.
+- Tasmania: FFDI median 2.5, 99th percentile 15.1, maximum 43.1. Highest
+  mean FFDI and most days >= 12 in the Midlands and Derwent Valley, lowest
+  in the west, as expected.
+- Fern Tree pixel (42.900 S, 147.250 E): mean 3.6, maximum 20.6 on
+  2025-03-20 (26.4 C, 23% RH, 29 km/h, DF 7.6), 13 days >= 12, none >= 25;
+  1,246 mm of rain over the fire year.
+- Gate: per-cell sums over 1,092 level 10 cells equal the direct pixel totals
+  for npix, ndays, sum, sumsq, spring sum and every count (largest relative
+  difference 1.5e-15).
+- Sizes: 23 MB per fire year; 32 MB of KBDI cache for four years (about
+  450 MB for 1970-2025).
+
 ## Open decisions
 
-- Rain for KBDI: AGCD (A) or BARRA-C2 (B).
-- Where to run: Gadi (`ob53` and `zv2` storage, `kj66` for projections) or
-  S3 from a cloud session for the observed part.
+- Decided 2026-11-26: AGCD rain (and Tmax) for KBDI and the drought factor;
+  run on Gadi (`gadi/ffdi_probe.sh`, `gadi/ffdi.pbs`, see `gadi/README.md`).
 - Whether a Fern Tree-only hourly FFDI (exact co-occurrence) belongs in
   epicormic as the local check on the daily index (proposed: yes).
