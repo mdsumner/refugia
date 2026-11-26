@@ -1,0 +1,47 @@
+#!/bin/bash
+#PBS -q normal
+#PBS -l ncpus=1
+#PBS -l mem=16GB
+#PBS -l walltime=12:00:00
+#PBS -l jobfs=1GB
+#PBS -l wd
+#PBS -j oe
+#PBS -N refugia-ffdi
+## Daily FFDI for the Tasmania pilot, then S2 level 10 cell sums (notes/fire_weather.md).
+## Run gadi/ffdi_probe.sh on a login node first. Then, from a clone of refugia on Gadi:
+##
+##   qsub -P gv90 -l storage=gdata/zv2+gdata/ob53+gdata/jk72+gdata/xp65 gadi/ffdi.pbs
+##
+## Stage 1 (python, xclim): $OUTDIR/daily/kbdi_df_<SPINUP>_<LAST>.nc (about 450 MB) and
+##   ffdi_fy<YYYY>.nc (about 23 MB each). Stage 2 (R, GDAL container):
+##   $OUTDIR/L10/ffdi_tasmania_fy<YYYY>_L10.rds (small: bring L10/ back). Both stages skip
+##   finished fire years, so rerun the same qsub after a walltime stop. One-year test:
+##   -l walltime=01:00:00 -v FIRST=2025,LAST=2025 (same LAST, so the full run reuses its KBDI).
+##
+## PYENV=xp65 (default) uses NCI's shared analysis3 conda environment; PYENV=sif uses python3
+## in the GDAL container instead (needs xclim there; the probe says which works).
+set -eo pipefail
+AGCD_DIR=${AGCD_DIR:-/g/data/zv2/agcd/v1-0-4}
+BARRA_DIR=${BARRA_DIR:-/g/data/ob53/BARRA2/output/reanalysis/AUST-04/BOM/ERA5/historical/hres/BARRA-C2/v1}
+OUTDIR=${OUTDIR:-/g/data/jk72/$USER/refugia/ffdi}
+FIRST=${FIRST:-1980}; LAST=${LAST:-2025}; SPINUP=${SPINUP:-1970}
+PYENV=${PYENV:-xp65}
+SIF=${SIF:-/g/data/jk72/$USER/sif_lib/gdal-r-python-extras_latest.sif}
+mkdir -p "$OUTDIR/daily" "$OUTDIR/L10"
+module load singularity
+[ -f "$SIF" ] || { echo "no image at $SIF" >&2; exit 1; }
+
+echo "stage 1 $(date -Is): fire years $FIRST-$LAST, KBDI spin-up from $SPINUP, PYENV=$PYENV"
+if [ "$PYENV" = xp65 ]; then
+  module use /g/data/xp65/public/modules
+  module load conda/analysis3
+  python3 gadi/ffdi_daily.py "$AGCD_DIR" "$BARRA_DIR" "$OUTDIR/daily" "$FIRST" "$LAST" "$SPINUP"
+else
+  singularity exec -B /g/data "$SIF" python3 gadi/ffdi_daily.py \
+    "$AGCD_DIR" "$BARRA_DIR" "$OUTDIR/daily" "$FIRST" "$LAST" "$SPINUP"
+fi
+
+echo "stage 2 $(date -Is): cell sums"
+export SINGULARITYENV_R_LIBS_USER=/nonexistent SINGULARITYENV_R_LIBS= SINGULARITYENV_PYTHONNOUSERSITE=1
+singularity exec -B /g/data "$SIF" Rscript gadi/ffdi_sums.R "$OUTDIR/daily" "$OUTDIR/L10" 10
+echo "done $(date -Is): $(ls "$OUTDIR/daily"/ffdi_fy*.nc | wc -l) fire years, $(ls "$OUTDIR/L10" | wc -l) cell-sum files in $OUTDIR"
