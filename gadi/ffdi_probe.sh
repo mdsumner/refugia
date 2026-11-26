@@ -16,8 +16,10 @@ for leaf in day/tasmax day/sfcWindmax 1hr/hurs fx/sftlf; do
   d="$BARRA_DIR/$leaf"
   if [ -d "$d" ]; then
     v=$(ls -d "$d"/v* 2>/dev/null | tail -1)
-    printf '## BARRA-C2 %-15s %s: %s files, %s .. %s\n' "$leaf" "$(basename "$v")" "$(ls "$v" | wc -l)" \
-      "$(ls "$v" | head -1 | grep -oE '[0-9]{6}-' | tr -d -)" "$(ls "$v" | tail -1 | grep -oE '[0-9]{6}-' | tr -d -)"
+    first=$(ls "$v" | head -1); last=$(ls "$v" | tail -1)
+    span="$(echo "$first" | grep -oE '[0-9]{6}-' | tr -d -) .. $(echo "$last" | grep -oE '[0-9]{6}-' | tr -d -)"
+    [ "$span" = " .. " ] && span=$first   # fx files carry no dates
+    printf '## BARRA-C2 %-15s %s: %s files, %s\n' "$leaf" "$(basename "$v")" "$(ls "$v" | wc -l)" "$span"
   else
     echo "## BARRA-C2 $leaf: not visible at $d (join ob53, and check the path)"
   fi
