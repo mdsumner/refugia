@@ -187,6 +187,21 @@ missing-value pattern and a largest absolute difference of 0. xclim returns
 pixel through terra, as `gadi/ffdi_sums.R` reads it, gives the same maximum
 of 20.62 on 2025-03-20 and 13 days >= 12 as xarray).
 
+## First Gadi test (2026-11-27 AEDT)
+
+The one-year test finished KBDI for 1970-2025 (7.7 minutes, `kbdi_df_1970_2025.nc` written)
+and then stopped after reading the fire year's BARRA-C2 months: the full BARRA-C2 files carry
+scalar coordinates (`height` 1.5 m for tasmax and hurs, 10 m for sfcWindmax; `crs`; and model
+level coordinates on hurs) that the local cropped copies had lost, so putting tasmax and
+sfcwindmax in one dataset raised `MergeError: conflicting values for variable 'height'`. The
+readers now drop non-index coordinates. Rerun locally on copies with those coordinates restored:
+FFDI and every other variable identical to the earlier run, with the cached KBDI and from scratch,
+and the level 10 cell sums identical. Reading the Tasmania box from full-domain files (S3
+originals) uses under 600 MB for an hourly month. PBS reported 16.0 GB used of 16 GB; the KBDI
+step scales from a measured 50 bytes per pixel-day to about 11 GB for 1970-2025, so the PBS
+figure probably includes file cache from reading 112 AGCD files. The full run reuses the cached
+KBDI (2.6 GB in memory).
+
 ## Open decisions
 
 - Decided 2026-11-26: AGCD rain (and Tmax) for KBDI and the drought factor;

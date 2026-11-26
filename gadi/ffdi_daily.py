@@ -60,7 +60,8 @@ def agcd(agcd_dir, var, years):
     parts = []
     for y in years:
         ds = xr.open_dataset(os.path.join(agcd_dir, AGCD_FILE[var].format(y=y)))
-        parts.append(ds[var].sortby("lat").sel(lat=slice(lat0, lat1), lon=slice(lon0, lon1)).load())
+        parts.append(ds[var].reset_coords(drop=True).sortby("lat")
+                     .sel(lat=slice(lat0, lat1), lon=slice(lon0, lon1)).load())
     return as_dates(xr.concat(parts, "time"))
 
 
@@ -99,9 +100,12 @@ def barra_month(barra_dir, freq, var, ym):
     if not files:
         raise FileNotFoundError(pat)
     lon0, lon1, lat0, lat1 = TASMANIA
-    with xr.open_dataset(files[-1]) as ds:   # latest version folder
-        return ds[var].sortby("lat").sel(lat=slice(lat0 - MARGIN, lat1 + MARGIN),
-                                         lon=slice(lon0 - MARGIN, lon1 + MARGIN)).load()
+    # latest version folder; drop the scalar coordinates (height 1.5 m for tasmax and hurs, 10 m
+    # for sfcWindmax, crs, model level), which conflict when the variables share one dataset
+    with xr.open_dataset(files[-1]) as ds:
+        return (ds[var].reset_coords(drop=True).sortby("lat")
+                .sel(lat=slice(lat0 - MARGIN, lat1 + MARGIN), lon=slice(lon0 - MARGIN, lon1 + MARGIN))
+                .load())
 
 
 def barra_fire_year(barra_dir, fy):
@@ -126,8 +130,9 @@ def land_mask(barra_dir, grid):
         raise FileNotFoundError(os.path.join(barra_dir, "fx", "sftlf"))
     lon0, lon1, lat0, lat1 = TASMANIA
     with xr.open_dataset(files[-1]) as ds:
-        f = ds["sftlf"].sortby("lat").sel(lat=slice(lat0 - MARGIN, lat1 + MARGIN),
-                                          lon=slice(lon0 - MARGIN, lon1 + MARGIN)).load()
+        f = (ds["sftlf"].reset_coords(drop=True).sortby("lat")
+             .sel(lat=slice(lat0 - MARGIN, lat1 + MARGIN), lon=slice(lon0 - MARGIN, lon1 + MARGIN))
+             .load())
     return f.interp(**grid, method="linear") >= 50
 
 
