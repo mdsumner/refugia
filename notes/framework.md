@@ -51,3 +51,7 @@ metric. Metrics are kept separate in outputs.
   best current dataset to confirm with colleagues.
 - 2026-11-18: Australian test regions are Tasmania and the MacDonnell Ranges
   IBRA region, one thermal/topographic and one hydrological site.
+- 2026-11-26: fire weather is a land variable here (not in epicormic): daily
+  McArthur FFDI from xclim as the Australian Climate Service computes it,
+  BARRA-C2 inputs regridded to the AGCD grid, level 10, fire years July to
+  June, Tasmania first. Design in `fire_weather.md`.
