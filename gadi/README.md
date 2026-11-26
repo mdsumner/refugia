@@ -36,8 +36,9 @@ which python imports xclim. Then a one-year test, then the lot:
       -l walltime=01:00:00 -v FIRST=2025,LAST=2025 gadi/ffdi.pbs
     qsub -P gv90 -l storage=gdata/zv2+gdata/ob53+gdata/jk72+gdata/xp65 gadi/ffdi.pbs
 
-(`-v PYENV=sif` uses the container's python instead, if the probe shows it has
-xclim.) The test also writes `kbdi_df_1970_2025.nc` (KBDI and drought factor
+Keep the default `PYENV=xp65`: the probe on 2026-11-26 found xclim 0.61.1 in
+xp65's `conda/analysis3` and none in the container (`-v PYENV=sif` would use
+the container's python, if it ever has xclim). The test also writes `kbdi_df_1970_2025.nc` (KBDI and drought factor
 for 1970-2025, about 450 MB), which the full run reuses because SPINUP and
 LAST are the same. Check the test's "Memory Used" in the job log: it includes
 the full KBDI, so it is the peak for the full run (default 16 GB; rerun with

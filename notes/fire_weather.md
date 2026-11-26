@@ -165,6 +165,28 @@ BARRA-C2 July 2024 to June 2025 from S3, KBDI spun up from 2022, xclim
 - Sizes: 23 MB per fire year; 32 MB of KBDI cache for four years (about
   450 MB for 1970-2025).
 
+## Gadi probe (2026-11-26)
+
+`bash gadi/ffdi_probe.sh` on a Gadi login node:
+
+- Projects gv90, jk72, zv2, ob53 and xp65 all joined.
+- BARRA-C2 at the default path under `/g/data/ob53`: day/tasmax,
+  day/sfcWindmax and 1hr/hurs v20250528, 571 monthly files each, 197901 to
+  202607; fx/sftlf v20240516.
+- AGCD v1-0-4 precip 1900-2025 and tmax 1910-2025, so the 1970 spin-up is
+  covered. Fire year 2026 (July 2025 to June 2026) has BARRA-C2 but waits
+  for an AGCD 2026 file, so LAST stays 2025.
+- Python: xp65 `conda/analysis3` has xclim 0.61.1 and xarray 2026.1.0; the
+  GDAL container has no xclim, so stage 1 uses xp65 (the default).
+
+The one-year test rerun locally with xclim 0.61.1 and xarray 2026.1.0
+(imports from `xclim.indices`) gives output identical to the 1.0.1 run:
+every variable in `kbdi_df_2022_2025.nc` and `ffdi_fy2025.nc` has the same
+missing-value pattern and a largest absolute difference of 0. xclim returns
+`ffdi` as (lat, lon, time); terra reads that file correctly (the Fern Tree
+pixel through terra, as `gadi/ffdi_sums.R` reads it, gives the same maximum
+of 20.62 on 2025-03-20 and 13 days >= 12 as xarray).
+
 ## Open decisions
 
 - Decided 2026-11-26: AGCD rain (and Tmax) for KBDI and the drought factor;
