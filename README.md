@@ -102,9 +102,9 @@ Daily McArthur FFDI from xclim (as the Australian Climate Service), per cell and
 - [x] probe BARRA-C2 on public S3: layout, chunking, packing, Tasmania read times (`sources/barra2_probe.py`)
 - [x] rain for KBDI: AGCD v1-0-4 (precip and Tmax, spin-up from 1970); run on Gadi
 - [x] scripts: `gadi/ffdi_probe.sh`, `gadi/ffdi_daily.py`, `gadi/ffdi_sums.R`, `gadi/ffdi.pbs`; one fire year (2025) tested end to end from public copies (see `notes/fire_weather.md`)
-- [ ] daily FFDI per pixel (BARRA-C2 Tmax, max wind, min RH from hourly; bilinear to AGCD r005), fire years 1980-2025, on Gadi
-- [ ] per-cell, per-fire-year sums at level 10: ndays, sum, sumsq, spring sum, days >= 12, 25, 50, mild days
-- [ ] gate: cell-sum cumulative FFDI equals a direct per-pixel computation
+- [x] daily FFDI per pixel (BARRA-C2 Tmax, max wind, min RH from hourly; bilinear to AGCD r005), fire years 1980-2025, on Gadi (2026-11-27; kept on Gadi, `/g/data/jk72/<user>/refugia/ffdi/daily/`)
+- [x] per-cell, per-fire-year sums at level 10: ndays, sum, sumsq, spring sum, days >= 12, 25, 50, mild days (46 rds, 1,092 cells each; `data/ffdi_L10/`, not in git)
+- [ ] gate: cell-sum cumulative FFDI equals a direct per-pixel computation (passed on the local 2025 test; repeat on the Gadi daily files)
 - [ ] checks: KBDI and drought factor against CEMS `cems-fire-historical-v1`; seasonal FFDI against Harris and Lucas stations; BARRA-R2 against BARRA-C2
 - [ ] trend, signal-to-noise, velocity and persistence (overall and in the five worst fire years), scored within IBRA; candidates into the shared schema
 - [ ] projections: `kj66` AUST-05i BARPA-R and CCAM, SSP1-2.6 and SSP3-7.0, same code; `toe` added to the metric vocabulary

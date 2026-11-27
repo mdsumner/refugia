@@ -202,6 +202,28 @@ step scales from a measured 50 bytes per pixel-day to about 11 GB for 1970-2025,
 figure probably includes file cache from reading 112 AGCD files. The full run reuses the cached
 KBDI (2.6 GB in memory).
 
+## Full run on Gadi (2026-11-27 AEDT)
+
+With the scalar-coordinate fix: the one-year test (job 185351169) passed in 1 min 56 s (6.8 GB),
+FFDI median 2.5, 99th percentile 15.0, maximum 43.3, against 2.5, 15.1 and 43.1 from the local
+test with KBDI spun up from 2022; cell sums for the same 1,092 cells with identical npix and
+ndays, Tasmania mean 3.426 against 3.432, cell means within 0.37. The full run (job 185351366)
+wrote fire years 1980-2024 in 1 h 37 min (68 to 349 s a fire year, mostly reading BARRA-C2) and
+the cell sums for all 46 in under a minute; exit status 0. PBS reported 16.0 GB used of 16 GB
+without killing the job, which supports file cache being counted. About 3 SU.
+
+Checks on the 46 level 10 files (`data/ffdi_L10/`, not in git): 1,092 cells every fire year,
+2,965 land pixels and the same npix every year, ndays = npix x days everywhere (no missing
+days), n_ge12 + n_mild = ndays, cell-mean FFDI 0.74 to 8.71. The Fern Tree cell (`aa6e77`) has 4
+land pixels.
+
+First look (not the framework's trend or scoring): Tasmania-wide mean FFDI by decade 2.57
+(1980s), 2.60 (1990s), 3.23 (2000s), 3.04 (2010s), 2.96 (2020-2025); ordinary least squares
+over fire years 1980-2025 +0.15 per decade (naive standard error 0.05) for mean FFDI and +1.4
+days per decade (0.6) for days >= 12 per pixel; Fern Tree cell +0.14 (0.06) and +1.0 (0.5). The
+worst fire years by days >= 12 are 2003, 2008, 2007, 2001, 2016, 2019 and 2013; the mildest
+2011, 1986, 1985 and 1987.
+
 ## Open decisions
 
 - Decided 2026-11-26: AGCD rain (and Tmax) for KBDI and the drought factor;
